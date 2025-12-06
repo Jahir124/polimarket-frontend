@@ -1,60 +1,78 @@
-import { useState } from "react";
-import "../../styles/homeStyles.css"
-import { Link } from "react-router-dom";
+import { useEffect } from "react";
+import { listProducts, loadMe } from "../utils/Functions";
+import { useNavigate } from "react-router-dom";
+import burbuja from "../../assets/burbujatxt.png";
 
-export const Home = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    try {
-      await login(email, password); 
-      window.location.href = "/products";
-    } catch (error) {
-      console.error("Error de login:", error);
-      alert("Error: Usuario o contraseña incorrectos.");
+const Home = () => {
+    const navigate = useNavigate()
+    const handleOpenChat = () => {
+        navigate('/chat-room')
     }
-  };
+
+  useEffect(() => {
+    loadMe();       
+    listProducts(); 
+  }, []);
 
   return (
-    <div>
-      <div className="login-container">
-        <h1>POLIMARKET</h1>
+    <>
+      <header className="header">
+        <a href="/home" className="logo">POLIMARKET</a>
+        <div
+          className="user-icon"
+          id="user-icon"
+          onClick={() => navigate('/dashboard')}
+        ></div>
+      </header>
 
-        <form id="login-form" onSubmit={handleSubmit}>
+      <div className="container">
+        <div className="search-container">
           <input
-            type="email"
-            id="email"
-            className="login-input"
-            placeholder="usuario@espol.edu.ec"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            type="text"
+            className="search-bar"
+            id="search-input"
+            placeholder="Buscar sanduches, empanadas..."
           />
 
-          <input
-            type="password"
-            id="password"
-            className="login-input"
-            placeholder="Contraseña"
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
+          <div className="filter-container">
+            <button
+              className="filter-btn"
+              onClick={(e) => window.toggleFilterDropdown(e)}
+            >
+              Filtrar
+            </button>
 
-          <button type="submit" className="login-btn">
-            Ingresar
-          </button>
-        </form>
+            <div className="filter-dropdown" id="filterDropdown">
+              <h4>Categoria</h4>
+              <label><input type="checkbox" name="category" value="food" /> Alimenticio</label>
+              <label><input type="checkbox" name="category" value="electronics" /> Electronico</label>
+              <label><input type="checkbox" name="category" value="study" /> Material de Estudio</label>
+
+              <hr />
+              <h4>Precio</h4>
+              <div className="price-inputs">
+                <input type="number" id="price-min" placeholder="Min" className="price-input" />
+                <input type="number" id="price-max" placeholder="Max" className="price-input" />
+              </div>
+
+              <button
+                className="apply-filter-btn"
+                onClick={() => window.applyFilters()}
+              >
+                Aplicar
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="product-grid" id="products"></div>
       </div>
 
-      <div className="login-container">
-        <a href="/recupera">Olvide mi contraseña</a>
-        <br />
-        ¿No tienes una cuenta? <Link to="/register"> Regístrate aquí </Link>
+      <div className="chat-bubble" onClick={handleOpenChat}>
+        <img src={burbuja} alt="abrir chat" />
       </div>
-    </div>
+    </>
   );
 };
+
+export default Home;

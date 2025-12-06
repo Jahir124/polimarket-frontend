@@ -55,7 +55,7 @@ export async function loadMe(){
 function updateUserIcon() {
     const icon = document.getElementById('user-icon');
     if (me && icon) {
-        icon.textContent = me.name.charAt(0).toUpperCase(); // Pone la inicial
+        icon.textContent = me.name.charAt(0).toUpperCase();
     }
 }
 
@@ -64,10 +64,9 @@ function logout() {
     localStorage.removeItem('me');
     token = null;
     me = null;
-    location.href = 'index.html'; // O a una página de login
+    location.href = 'index.html';
 }
 
-// --- Productos (Comprador) ---
 
 export async function listProducts(){
     const res = await fetch(`${API}/products`);
@@ -91,8 +90,7 @@ export async function listProducts(){
     `).join('');
 }
 
-function toggleFavorite(btn, productId) {
-    // Lógica para añadir a favoritos
+export function toggleFavorite(btn, productId) {
     console.log("Toggle favorite for product", productId);
     btn.classList.toggle('liked');
     btn.innerHTML = btn.classList.contains('liked') ? '♥' : '♡';
@@ -114,12 +112,6 @@ export async function loadProductPage(){
     document.getElementById('product-image').src = p.image_url || 'placeholder.jpg';
 }
 
-
-// --- Chat (Seguro) ---
-
-/**
- * (MODIFICADO) Inicia un chat y redirige a la sala de chat
- */
 export async function startChat() {
     if (!token) {
         alert('Debes iniciar sesión para chatear');
@@ -135,7 +127,6 @@ export async function startChat() {
         
         if (!res.ok) {
             const err = await res.json();
-            // Si el chat ya existe, la API devuelve el ID, así que esto es para errores reales
             if (res.status !== 400) { 
                  alert(`Error: ${err.detail}`);
                  return;
@@ -144,7 +135,6 @@ export async function startChat() {
 
         const data = await res.json();
         
-        // ¡REDIRECCIÓN!
         location.href = `chat_room.html?id=${data.chat_id}`;
 
     } catch (e) {
@@ -156,14 +146,12 @@ let ws;
 function openChat(chatId){
     document.getElementById('chat').style.display = 'block';
     
-    // Conexión segura: Pasa el token como parámetro
     ws = new WebSocket(`ws://127.0.0.1:8000/ws/chats/${chatId}?token=${encodeURIComponent(token)}`);
     
     ws.onmessage = (ev)=>{
         const m = JSON.parse(ev.data);
         const box = document.getElementById('msgs');
         
-        // Determina si el mensaje es 'sent' o 'received'
         const msgClass = (m.author_id === me.id) ? 'sent' : 'received';
         
         box.innerHTML += `
@@ -186,34 +174,21 @@ function openChat(chatId){
 }
 
 
-function sendMsg(){
+export function sendMsg(){
     const input = document.getElementById('msgInput');
     if (input.value.trim() === '') return;
     
-    // ¡SEGURO! Solo envía el texto. El backend sabe quién eres.
     ws.send(JSON.stringify({ text: input.value }));
     
     input.value = '';
 }
 
-
-/* ---- Lógica del Dropdown de Filtros ---- */
-
-/**
- * Muestra u oculta el menú desplegable de filtros.
- */
-function toggleFilterDropdown(event) {
-    // Detiene el clic para que no se propague al 'window' (ver abajo)
+export function toggleFilterDropdown(event) {
     event.stopPropagation(); 
     document.getElementById("filterDropdown").classList.toggle("show");
 }
 
-/**
- * Cierra el menú desplegable si el usuario hace clic
- * en cualquier otro lugar de la pantalla.
- */
 window.addEventListener('click', function(event) {
-    // Comprueba si el clic NO fue dentro del contenedor de filtros
     if (!event.target.closest('.filter-container')) {
         
         var dropdowns = document.getElementsByClassName("filter-dropdown");
@@ -227,11 +202,6 @@ window.addEventListener('click', function(event) {
 });
 
 
-// EN app.js
-
-/**
- * (NUEVO) Carga la lista de chats en chats.html
- */
 export async function loadChatList() {
     if (!token) {
         location.href = 'index.html';
@@ -252,7 +222,6 @@ export async function loadChatList() {
         }
 
         container.innerHTML = chats.map(chat => {
-            // Determina con quién estás hablando
             const otherUser = (me.id === chat.buyer_id) ? chat.seller : chat.buyer;
             return `
                 <div classclass="chat-list-item" onclick="location.href='chat_room.html?id=${chat.id}'">
@@ -288,7 +257,6 @@ export async function loadChatRoom() {
     box.innerHTML = '<p>Cargando historial...</p>';
 
     try {
-        // 1. Cargar historial
         const res = await fetch(`${API}/chats/${chatId}/messages`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -296,7 +264,6 @@ export async function loadChatRoom() {
         
         const messages = await res.json();
         
-        // 2. Renderizar historial
         box.innerHTML = messages.map(m => {
             const msgClass = (m.author_id === me.id) ? 'sent' : 'received';
             return `
@@ -308,7 +275,6 @@ export async function loadChatRoom() {
         }).join('');
         box.scrollTop = box.scrollHeight;
 
-        // 3. Conectar al WebSocket (la función openChat ya existe)
         openChat(chatId);
 
     } catch (e) {
