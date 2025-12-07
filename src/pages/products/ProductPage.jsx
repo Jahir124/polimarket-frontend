@@ -10,7 +10,7 @@ export default function ProductPage() {
 
   const loadMe = async () => {
     try {
-      const res = await fetch("http://127.0.0.1:8000/auth/me", {
+      const res = await fetch(`${API}/auth/me`, {
         credentials: "include",
       });
 
@@ -26,7 +26,7 @@ export default function ProductPage() {
   const loadProduct = async () => 
   {
     try {
-      const res = await fetch(`http://127.0.0.1:8000/products/${id}`);
+      const res = await fetch(`${API}/products/${id}`);
 
       if (!res.ok) throw new Error("Error al cargar producto");
 
@@ -39,7 +39,7 @@ export default function ProductPage() {
 
   const startChat = async () => {
     try {
-      const res = await fetch(`http://127.0.0.1:8000/chat/start/${id}`, {
+      const res = await fetch(`${API}/chat/start/${id}`, {
         method: "POST",
         credentials: "include",
       });

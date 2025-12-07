@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import "../../styles/homeStyles.css"; // crea este archivo para estilos propios
+import "../../styles/homeStyles.css"; 
 
 export const Recupera = () => {
   const [email, setEmail] = useState("");
@@ -8,7 +8,6 @@ export const Recupera = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validación de correo institucional
     if (!email.toLowerCase().endsWith("@espol.edu.ec")) {
       alert("Solo se permiten correos institucionales @espol.edu.ec.");
       return;

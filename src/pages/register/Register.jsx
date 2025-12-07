@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "../../styles/homeStyles.css"
+import { API } from "../utils/Functions";
 
 export const Register = () => {
   const navigate = useNavigate();
@@ -18,8 +19,7 @@ export const Register = () => {
     }
 
     try {
-      // Conexión al backend
-      const response = await fetch("http://127.0.0.1:8000/auth/register", {
+      const response = await fetch(`${API}/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email, password }),
@@ -30,10 +30,9 @@ export const Register = () => {
         throw new Error(data.detail || "Error en el registro");
       }
 
-      // Registro exitoso
       alert("¡Registro completo!: " + JSON.stringify(data, null, 2));
 
-      navigate("/"); // Redirige a Home/Login
+      navigate("/");
     } catch (error) {
       console.error("Error de registro:", error);
       alert(error.message || "Error en el registro. Es probable que ese correo ya esté en uso.");
