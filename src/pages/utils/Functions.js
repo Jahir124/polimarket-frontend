@@ -1,4 +1,4 @@
-const API = "http://127.0.0.1:8000";
+const API = process.env.REACT_APP_API_URL || 'http://localhost:8000';
 let token = localStorage.getItem("token");
 let me = JSON.parse(localStorage.getItem("me") || "null");
 
