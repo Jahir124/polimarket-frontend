@@ -11,7 +11,7 @@ export default function SellerPage() {
 
   const loadMe = async () => {
     try {
-      const res = await fetch("http://127.0.0.1:8000/auth/me", {
+      const res = await fetch(`${API}/auth/me`, {
         credentials: "include",
       });
 
@@ -26,14 +26,6 @@ export default function SellerPage() {
 
   const loadAnalytics = async () => {
     try {
-      // TODO: Fetch real analytics from backend
-      // Example:
-      // const res = await fetch("http://127.0.0.1:8000/analytics", { credentials:"include" })
-      // const data = await res.json();
-      // setMonthlySales(data.sales);
-      // setMonthlyProfit(data.profit);
-
-      // Temporary static values
       setMonthlySales(120);
       setMonthlyProfit(450.0);
     } catch (err) {

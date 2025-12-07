@@ -146,7 +146,7 @@ let ws;
 function openChat(chatId){
     document.getElementById('chat').style.display = 'block';
     
-    ws = new WebSocket(`ws://127.0.0.1:8000/ws/chats/${chatId}?token=${encodeURIComponent(token)}`);
+    ws = new WebSocket(`ws://${API}/ws/chats/${chatId}?token=${encodeURIComponent(token)}`);
     
     ws.onmessage = (ev)=>{
         const m = JSON.parse(ev.data);
