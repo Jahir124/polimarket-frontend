@@ -1,4 +1,4 @@
-export const API = import.meta.env.VITE_APP_API_URL || 'http://localhost:8000';
+export const API = import.meta.env.VITE_APP_API_URL;
 let token = localStorage.getItem("token");
 let me = JSON.parse(localStorage.getItem("me") || "null");
 
