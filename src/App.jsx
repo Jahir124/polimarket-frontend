@@ -5,9 +5,15 @@ import { ChatRoom } from "./pages/chat/ChatRoom"
 import { Recupera } from "./pages/recupera/Recupera";
 import "./styles/general.css"
 import ProductPage from "./pages/products/ProductPage";
-import SellerPage from "./pages/Seller/SellerPage";
+import ProfilePage from "./pages/Seller/SellerPage";
 import Home from "./pages/home/Home";
 import Chats from "./pages/chat/Chats";
+
+import ConfigPage from "./pages/config/ConfigPage";
+import DeliveryPage from "./pages/delivery/DeliveryPage";
+
+
+
 
 function App() {
 
@@ -20,7 +26,9 @@ function App() {
       <Route path="/chat-room" element={<ChatRoom />}/>
       <Route path="my-chats" element={<Chats />}/>
       <Route path='/product/:id' element={<ProductPage />}/>
-      <Route path="/dashboard" element={<SellerPage />} />
+      <Route path="/profile" element={<ProfilePage />} />
+      <Route path="/config" element={<ConfigPage />} />
+      <Route path="/delivery-dashboard" element={<DeliveryPage />} /> 
     </Routes>
   )
 }

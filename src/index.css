@@ -1,3 +1,365 @@
-body {
-  margin: 0 auto;
+:root {
+  /* --- MODO CLARO (Tu diseño original "Glow Up") --- */
+  --bg-body: #f8f9fa;             /* Fondo gris casi blanco */
+  --bg-card: #ffffff;             /* Tarjetas blancas puras */
+  --glass-header: rgba(255, 255, 255, 0.85); /* Vidrio blanco */
+  --text-main: #2d3436;           /* Texto oscuro elegante */
+  --text-muted: #636e72;
+  
+  --primary: #002f6c;             /* Azul Institucional */
+  --primary-light: #004a99;
+  --accent: #ff9f1c;              /* Naranja Vibrante */
+  
+  --input-bg: #ffffff;
+  --border-color: transparent;    /* En modo claro usábamos sombras, no bordes */
+  
+  --shadow: 0 10px 20px rgba(0, 0, 0, 0.08); /* Sombra suave y difusa */
+  --radius: 16px;                 /* Bordes muy redondeados */
 }
+
+/* --- MODO OSCURO (Adaptación elegante "Deep Night") --- */
+body.dark {
+  --bg-body: #0f172a;             /* Azul noche muy oscuro (no negro puro, más elegante) */
+  --bg-card: #1e293b;             /* Azul grisáceo oscuro */
+  --glass-header: rgba(15, 23, 42, 0.85); /* Vidrio oscuro */
+  --text-main: #f1f5f9;           /* Blanco hueso */
+  --text-muted: #94a3b8;
+  
+  --primary: #38bdf8;             /* Azul cian brillante (para resaltar sobre oscuro) */
+  --primary-light: #0ea5e9;
+  --accent: #fbbf24;              /* Naranja dorado */
+  
+  --input-bg: #334155;
+  --border-color: #334155;        /* Bordes sutiles para definir formas en la oscuridad */
+  
+  --shadow: 0 10px 25px rgba(0, 0, 0, 0.5); /* Sombra más fuerte para dar profundidad */
+}
+
+/* --- BASE --- */
+body {
+  margin: 0;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: var(--bg-body);
+  color: var(--text-main);
+  transition: background-color 0.3s ease, color 0.3s ease; /* Transición suave al cambiar tema */
+  -webkit-font-smoothing: antialiased;
+}
+
+/* --- HEADER GLASSMORPHISM --- */
+.header {
+  background: var(--glass-header);
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1); /* Sombra especial para vidrio */
+  backdrop-filter: blur(12px);               /* EL EFECTO BORROSO */
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.logo {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--primary); /* En dark mode cambia a cian, en light a azul oscuro */
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  letter-spacing: -1px;
+}
+
+.user-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: var(--bg-body);
+  background-size: cover;
+  background-position: center;
+  cursor: pointer;
+  border: 2px solid var(--accent);
+  transition: transform 0.2s;
+}
+.user-icon:hover { transform: scale(1.1); }
+
+/* --- CONTENEDORES --- */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+/* --- SEARCH & FILTERS (Estilo "Píldora") --- */
+.search-container {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  position: relative;
+}
+
+.search-bar {
+  flex: 1;
+  padding: 1rem 1.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: 50px; /* Redondo estilo Google/Apple */
+  background: var(--bg-card);
+  color: var(--text-main);
+  box-shadow: var(--shadow);
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.search-bar:focus {
+  outline: none;
+  border-color: var(--primary);
+  transform: translateY(-2px);
+}
+
+.filter-btn {
+  padding: 0 1.5rem;
+  background: var(--primary);
+  color: white; /* Siempre blanco el texto del botón */
+  border: none;
+  border-radius: 50px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+  transition: background 0.2s;
+}
+.filter-btn:hover { background: var(--primary-light); }
+
+/* --- PRODUCT GRID --- */
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 2rem;
+}
+
+.product-card {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+}
+
+.product-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2); /* Sombra más dramática al hover */
+}
+
+.product-card img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  background: #eee;
+}
+
+.product-info {
+  padding: 1.2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.product-info h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.product-price {
+  color: var(--accent);
+  font-weight: 800;
+  font-size: 1.2rem;
+}
+
+/* --- FORMULARIOS (LOGIN/ADD) --- */
+.login-container {
+  background: var(--bg-card);
+  padding: 3rem;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border-color);
+  max-width: 400px;
+  margin: 4rem auto;
+  text-align: center;
+}
+
+.login-input, textarea, select {
+  width: 100%;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  background-color: var(--input-bg);
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  box-sizing: border-box;
+  font-size: 1rem;
+}
+
+.login-btn {
+  width: 100%;
+  padding: 1rem;
+  background: var(--primary);
+  color: white; /* El texto dentro de botones sólidos suele ser blanco */
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: 0.3s;
+}
+.login-btn:hover { background: var(--accent); transform: translateY(-2px); }
+
+/* --- PERFIL / TABS --- */
+.tabs {
+  display: inline-flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  background: var(--bg-card);
+  padding: 0.5rem;
+  border-radius: 50px;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border-color);
+}
+
+.tabs button {
+  background: transparent;
+  border: none;
+  padding: 0.8rem 1.5rem;
+  border-radius: 40px;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.tabs button.active {
+  background: var(--primary);
+  color: white; /* Texto blanco en la pestaña activa */
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* --- DETALLE PRODUCTO (Marketplace Style) --- */
+.product-detail-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3rem;
+  padding: 2rem;
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border-color);
+  margin-top: 2rem;
+}
+
+@media (max-width: 768px) {
+  .product-detail-container { grid-template-columns: 1fr; }
+}
+
+.detail-image-box {
+  background: var(--bg-body);
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  height: 500px;
+}
+
+.detail-info h1 {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+  color: var(--primary);
+}
+
+.detail-price {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--accent);
+  margin-bottom: 1.5rem;
+}
+
+.category-tag {
+  display: inline-block;
+  background: var(--bg-body);
+  padding: 0.4rem 1rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+  margin-bottom: 1.5rem;
+  text-transform: uppercase;
+  font-weight: bold;
+}
+
+/* --- VENDEDOR & CHAT --- */
+.seller-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: var(--bg-body);
+  padding: 1rem;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  margin: 2rem 0;
+  color: var(--text-main);
+}
+
+.contact-btn {
+  background: var(--primary);
+  color: white;
+  width: 100%;
+  padding: 1rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+.contact-btn:hover { background: var(--primary-light); }
+
+.chat-bubble {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  background: var(--accent);
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 20px rgba(255, 159, 28, 0.4);
+  cursor: pointer;
+  transition: transform 0.2s;
+  z-index: 1000;
+}
+.chat-bubble:hover { transform: scale(1.1) rotate(5deg); }
+.chat-bubble img { width: 30px; }
+
+.fav-btn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: color 0.2s, transform 0.1s;
+}
+.fav-btn.liked { color: #ff4757; }
+.fav-btn:active { transform: scale(1.3); }
