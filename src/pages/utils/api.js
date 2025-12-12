@@ -1,0 +1,7 @@
+// src/utils/api.js
+
+// Producción: backend en Render
+export const API = "https://api-polimarket.onrender.com";
+
+// Desarrollo local:
+// export const API = "http://127.0.0.1:8000";

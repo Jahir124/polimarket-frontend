@@ -1,19 +1,19 @@
 import { useState } from "react";
-import "../../styles/homeStyles.css"
+import "../../styles/homeStyles.css";
 import { Link, useNavigate } from "react-router-dom";
 import { login } from "../utils/Functions";
 
 export const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
-      await login(email, password); 
-      navigate('/home')
+      await login(email, password);
+      navigate("/home");
     } catch (error) {
       console.error("Error de login:", error);
       alert("Error: Usuario o contraseña incorrectos.");
@@ -53,7 +53,7 @@ export const Login = () => {
       </div>
 
       <div className="login-container">
-        <a href="/recupera">Olvide mi contraseña</a>
+        <a href="/recupera">Olvidé mi contraseña</a>
         <br />
         ¿No tienes una cuenta? <Link to="/register"> Regístrate aquí </Link>
       </div>
