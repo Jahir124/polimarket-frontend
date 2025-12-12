@@ -78,7 +78,7 @@ export default function ProductPage() {
           <div className="detail-info">
             <span className="category-tag">{product.category}</span>
             <h1>{product.title}</h1>
-            <div className="detail-price">${product.price.toFixed(2)}</div>
+            <div className="detail-price">${Number(product?.price??0).toFixed(2)}</div>
             <p style={{marginBottom:'2rem', color:'var(--text-muted)'}}>{product.description}</p>
 
             {seller && (

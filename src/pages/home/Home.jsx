@@ -135,7 +135,7 @@ const Home = () => {
               <div className="product-info">
                 <div>
                   <h3>{p.title}</h3>
-                  <div className="product-price">${p.price.toFixed(2)}</div>
+                  <div className="product-price">${Number(p.price||0).toFixed(2)}</div>
                 </div>
                 
                 {/* BOTÓN CORAZÓN */}
