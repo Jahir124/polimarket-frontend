@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { API, loadMe } from "../utils/Functions";
 import burbuja from "../../assets/burbujatxt.png";
-import ThemeToggle from "../../components/ThemeToggle";
 const Home = () => {
   const navigate = useNavigate();
   const [products, setProducts] = useState([]);
@@ -99,8 +98,7 @@ const Home = () => {
         {/* Agrupamos los iconos a la derecha */}
         <div style={{display:'flex', alignItems:'center', gap:'15px'}}>
             
-            {/* 2. AÑADE EL BOTÓN AQUÍ */}
-            <ThemeToggle />
+            
 
 
         <div className="user-icon" onClick={() => navigate('/profile')}></div>

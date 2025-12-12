@@ -24,7 +24,7 @@ function App() {
       <Route path="/Register" element={<Register />}/>
       <Route path="/Recupera" element={<Recupera />}/>
       <Route path="/chat-room" element={<ChatRoom />}/>
-      <Route path="my-chats" element={<Chats />}/>
+      <Route path="chats" element={<Chats />}/>
       <Route path='/product/:id' element={<ProductPage />}/>
       <Route path="/profile" element={<ProfilePage />} />
       <Route path="/config" element={<ConfigPage />} />

@@ -6,90 +6,106 @@ export default function ProfilePage() {
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
 
-  // Estados
+  // Datos de Usuario
   const [user, setUser] = useState(null);
-  const [activeTab, setActiveTab] = useState("my_products"); 
+  
+  // Pestañas: 'products' | 'sales' | 'purchases' | 'favorites' | 'edit_form'
+  const [activeTab, setActiveTab] = useState("products"); 
+
+  // Datos de Listas
   const [myProducts, setMyProducts] = useState([]);
+  const [mySales, setMySales] = useState([]);
+  const [myPurchases, setMyPurchases] = useState([]);
   const [favorites, setFavorites] = useState([]);
 
-  // Estados del Formulario
-  const [isEditing, setIsEditing] = useState(null);
+  // Dashboard Stats
+  const [earnings, setEarnings] = useState(0);
+
+  // Formulario (Añadir / Editar)
+  const [isEditingId, setIsEditingId] = useState(null); // ID del producto si estamos editando
   const [formData, setFormData] = useState({ title: "", description: "", price: "", category: "food", file: null });
+  const [loading, setLoading] = useState(false);
 
-  // 1. CARGA SEGURA DE USUARIO
+  // 1. CARGA INICIAL
   useEffect(() => {
-    const fetchMe = async () => {
-        if (!token) {
-            navigate("/"); // Si no hay token, fuera.
-            return;
-        }
-
-        try {
-            const res = await fetch(`${API}/auth/me`, { 
-                headers: { Authorization: `Bearer ${token}` } 
-            });
-
-            if (!res.ok) {
-                throw new Error("Sesión caducada");
-            }
-
-            const data = await res.json();
-            setUser(data);
-        } catch (error) {
-            console.error("Error de sesión:", error);
-            localStorage.removeItem("token");
-            localStorage.removeItem("me");
-            navigate("/"); 
-        }
-    };
-    
+    if (!token) { navigate("/"); return; }
     fetchMe();
-  }, [token, navigate]);
+  }, [token]);
 
-  // 2. CARGAR DATOS SEGÚN LA PESTAÑA
+  // 2. CARGA DE DATOS AL CAMBIAR PESTAÑA
   useEffect(() => {
-    if (user) { 
-        if (activeTab === "my_products") loadMyProducts();
-        if (activeTab === "favorites") loadFavorites();
-    }
-  }, [activeTab, user]); 
+    if (!user) return;
+    if (activeTab === "products") loadMyProducts();
+    if (activeTab === "sales") loadMySales();
+    if (activeTab === "purchases") loadMyPurchases();
+    if (activeTab === "favorites") loadFavorites();
+  }, [activeTab, user]);
+
+  const fetchMe = async () => {
+    try {
+        const res = await fetch(`${API}/auth/me`, { headers: { Authorization: `Bearer ${token}` } });
+        if (!res.ok) throw new Error("Sesión caducada");
+        setUser(await res.json());
+    } catch (e) { navigate("/"); }
+  };
 
   const loadMyProducts = async () => {
-    if (!user || !user.id) return; 
-    try {
-        const res = await fetch(`${API}/users/${user.id}/products`);
-        if (res.ok) {
-            const data = await res.json();
-            setMyProducts(data);
-        }
-    } catch (e) { console.error("Error cargando mis productos", e); }
+    const res = await fetch(`${API}/users/${user.id}/products`);
+    if(res.ok) setMyProducts(await res.json());
+  };
+
+  const loadMySales = async () => {
+    const res = await fetch(`${API}/users/me/sales`, { headers: { Authorization: `Bearer ${token}` } });
+    if(res.ok) {
+        const data = await res.json();
+        setMySales(data);
+        // Calcular Ganancias Totales
+        const total = data.reduce((sum, order) => sum + (order.product?.price || 0), 0);
+        setEarnings(total);
+    }
+  };
+
+  const loadMyPurchases = async () => {
+    const res = await fetch(`${API}/users/me/purchases`, { headers: { Authorization: `Bearer ${token}` } });
+    if(res.ok) setMyPurchases(await res.json());
   };
 
   const loadFavorites = async () => {
-    try {
-        const res = await fetch(`${API}/users/me/favorites`, { headers: { Authorization: `Bearer ${token}` } });
-        if (res.ok) {
-            const data = await res.json();
-            setFavorites(data);
-        }
-    } catch (e) { console.error("Error cargando favoritos", e); }
+    const res = await fetch(`${API}/users/me/favorites`, { headers: { Authorization: `Bearer ${token}` } });
+    if(res.ok) setFavorites(await res.json());
   };
 
-  // 3. MANEJO DEL FORMULARIO
+  // --- LÓGICA DE EDICIÓN ---
+  const handleEditClick = (p) => {
+    setIsEditingId(p.id);
+    setFormData({ 
+        title: p.title, 
+        description: p.description, 
+        price: p.price, 
+        category: p.category, 
+        file: null 
+    });
+    setActiveTab("edit_form");
+  };
+
+  const handleCreateClick = () => {
+    setIsEditingId(null);
+    setFormData({ title: "", description: "", price: "", category: "food", file: null });
+    setActiveTab("edit_form");
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const url = isEditing ? `${API}/products/${isEditing}` : `${API}/products`;
-    const method = isEditing ? "PUT" : "POST";
+    setLoading(true);
+    const url = isEditingId ? `${API}/products/${isEditingId}` : `${API}/products`;
+    const method = isEditingId ? "PUT" : "POST";
 
     const formBody = new FormData();
     formBody.append("title", formData.title);
     formBody.append("description", formData.description);
     formBody.append("price", formData.price);
     formBody.append("category", formData.category);
-    
-    if (formData.file) {
-        formBody.append("file", formData.file);
-    }
+    if (formData.file) formBody.append("file", formData.file);
 
     try {
         const res = await fetch(url, {
@@ -99,52 +115,24 @@ export default function ProfilePage() {
         });
 
         if (res.ok) {
-            alert(isEditing ? "Producto actualizado" : "¡Producto publicado con éxito!");
-            setIsEditing(null);
-            setFormData({ title: "", description: "", price: "", category: "food", file: null });
-            await loadMyProducts(); 
-            setActiveTab("my_products"); 
+            alert(isEditingId ? "Producto actualizado" : "Producto publicado");
+            await loadMyProducts();
+            setActiveTab("products");
         } else {
-            const errData = await res.json();
-            alert("Error: " + (errData.detail || "No se pudo guardar"));
+            alert("Error al guardar");
         }
-    } catch (error) {
-        console.error(error);
-        alert("Error de conexión al guardar.");
-    }
+    } catch (e) { console.error(e); }
+    setLoading(false);
   };
 
-  const handleEditClick = (p) => {
-    setIsEditing(p.id);
-    setFormData({ title: p.title, description: p.description, price: p.price, category: p.category, file: null });
-    setActiveTab("add");
-  };
-
-  // --- RENDERIZADO ---
   if (!user) return <div className="container" style={{textAlign:'center', marginTop:'50px'}}>Cargando perfil...</div>;
 
   return (
     <div>
       <header className="header">
-        <button 
-            className="logo" 
-            style={{background:'none', border:'none', fontSize:'1.2rem', cursor:'pointer'}} 
-            onClick={() => navigate("/home")}
-        >
-          ← Volver
-        </button>
-        
+        <button className="logo" style={{background:'none', border:'none', fontSize:'1.2rem', cursor:'pointer', color:'var(--text-main)'}} onClick={() => navigate("/home")}>← Volver</button>
         <div style={{display:'flex', alignItems:'center', gap:'15px'}}>
-           {/* --- AQUÍ ESTÁ EL NUEVO BOTÓN DE CONFIGURACIÓN --- */}
-           <button 
-             onClick={() => navigate("/config")} 
-             title="Configuración de usuario"
-             style={{background:'none', border:'none', fontSize:'1.5rem', cursor:'pointer'}}
-           >
-             ⚙️
-           </button>
-           {/* ------------------------------------------------ */}
-
+           <button onClick={() => navigate("/config")} style={{background:'none', border:'none', fontSize:'1.5rem', cursor:'pointer'}}>⚙️</button>
            <span style={{fontWeight:'bold', color:'var(--primary)', fontSize:'1.1rem'}}>{user.name}</span>
            <div className="user-icon" style={user.profile_image ? {backgroundImage: `url(${user.profile_image})`} : {}}></div>
         </div>
@@ -152,48 +140,108 @@ export default function ProfilePage() {
 
       <div className="container">
         
-        {/* PESTAÑAS */}
-        <div style={{textAlign:'center', marginBottom:'2rem'}}>
-            <div className="tabs">
-                <button className={activeTab === "my_products" ? "active" : ""} onClick={() => setActiveTab("my_products")}>📦 Mis Ventas</button>
+        {/* NAVEGACIÓN DE PESTAÑAS */}
+        <div style={{overflowX:'auto', whiteSpace:'nowrap', marginBottom:'2rem', paddingBottom:'10px'}}>
+            <div className="tabs" style={{display:'inline-flex'}}>
+                <button className={activeTab === "products" ? "active" : ""} onClick={() => setActiveTab("products")}>📦 Mis Productos</button>
+                <button className={activeTab === "sales" ? "active" : ""} onClick={() => setActiveTab("sales")}>💰 Mis Ventas</button>
+                <button className={activeTab === "purchases" ? "active" : ""} onClick={() => setActiveTab("purchases")}>🛍️ Mis Compras</button>
                 <button className={activeTab === "favorites" ? "active" : ""} onClick={() => setActiveTab("favorites")}>❤️ Favoritos</button>
-                <button className={activeTab === "add" ? "active" : ""} onClick={() => { setIsEditing(null); setFormData({ title: "", description: "", price: "", category: "food", file: null }); setActiveTab("add"); }}>
-                    {isEditing ? "✏️ Editando..." : "➕ Vender"}
-                </button>
             </div>
         </div>
 
-        {/* PESTAÑA: MIS PRODUCTOS */}
-        {activeTab === "my_products" && (
-          <div className="product-grid">
-            {myProducts.length === 0 && <p style={{gridColumn:'1/-1', textAlign:'center', color:'#888'}}>No has publicado nada aún. ¡Anímate!</p>}
-            {myProducts.map(p => (
-              <div key={p.id} className="product-card">
-                <img src={p.image_url || 'https://via.placeholder.com/150'} alt={p.title} />
-                <div className="product-info">
-                  <div>
-                    <h3>{p.title}</h3>
-                    <span className="product-price">${p.price.toFixed(2)}</span>
-                  </div>
-                  <button 
-                    onClick={() => handleEditClick(p)} 
-                    style={{border:'none', background:'#eff0f1', padding:'8px 12px', borderRadius:'8px', cursor:'pointer', fontWeight:'bold', color:'var(--text-dark)'}}
-                  >
-                    Editar
-                  </button>
+        {/* --- 1. PESTAÑA: MIS PRODUCTOS (Editable) --- */}
+        {activeTab === "products" && (
+          <>
+            <button className="login-btn" style={{marginBottom:'20px'}} onClick={handleCreateClick}>+ Publicar Nuevo Producto</button>
+            <div className="product-grid">
+                {myProducts.length === 0 && <p style={{color:'var(--text-muted)'}}>No tienes productos en venta.</p>}
+                {myProducts.map(p => (
+                <div key={p.id} className="product-card">
+                    <img src={p.image_url} alt={p.title} />
+                    <div className="product-info">
+                        <div>
+                            <h3>{p.title}</h3>
+                            <span className="product-price">${p.price.toFixed(2)}</span>
+                        </div>
+                        <button 
+                            onClick={() => handleEditClick(p)} 
+                            style={{border:'none', background:'var(--bg-body)', padding:'8px', borderRadius:'8px', cursor:'pointer', fontSize:'1.2rem'}}
+                            title="Editar este producto"
+                        >
+                            ✏️
+                        </button>
+                    </div>
                 </div>
-              </div>
-            ))}
+                ))}
+            </div>
+          </>
+        )}
+
+        {/* --- 2. PESTAÑA: MIS VENTAS (Dashboard) --- */}
+        {activeTab === "sales" && (
+          <div>
+            {/* DASHBOARD CARD */}
+            <div style={{background:'linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%)', padding:'25px', borderRadius:'16px', color:'#0f172a', marginBottom:'30px', boxShadow:'var(--shadow)'}}>
+                <div style={{fontSize:'1rem', opacity:0.8, marginBottom:'5px', color:'white'}}>Ganancias Totales</div>
+                <div style={{fontSize:'3rem', fontWeight:'800', color:'white'}}>${earnings.toFixed(2)}</div>
+                <div style={{fontSize:'0.9rem', color:'white', opacity:0.9}}>Has vendido {mySales.length} productos exitosamente.</div>
+            </div>
+
+            <h3 style={{color:'var(--text-main)'}}>Historial de Ventas</h3>
+            <div style={{display:'flex', flexDirection:'column', gap:'15px'}}>
+                {mySales.length === 0 && <p style={{color:'var(--text-muted)'}}>Aún no has realizado ventas.</p>}
+                {mySales.map(order => (
+                    <div key={order.id} style={{background:'var(--bg-card)', padding:'15px', borderRadius:'12px', border:'1px solid var(--border-color)', display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+                        <div style={{display:'flex', alignItems:'center', gap:'15px'}}>
+                            <img src={order.product?.image_url} style={{width:'50px', height:'50px', borderRadius:'8px', objectFit:'cover'}} />
+                            <div>
+                                <div style={{fontWeight:'bold', color:'var(--text-main)'}}>{order.product?.title || "Producto eliminado"}</div>
+                                <div style={{fontSize:'0.8rem', color:'var(--text-muted)'}}>{new Date(order.created_at).toLocaleDateString()}</div>
+                            </div>
+                        </div>
+                        <div style={{textAlign:'right'}}>
+                            <div style={{color:'var(--accent)', fontWeight:'bold'}}>+${order.product?.price.toFixed(2)}</div>
+                            <div style={{fontSize:'0.8rem', color:'green'}}>Completado</div>
+                        </div>
+                    </div>
+                ))}
+            </div>
           </div>
         )}
 
-        {/* PESTAÑA: FAVORITOS */}
+        {/* --- 3. PESTAÑA: MIS COMPRAS --- */}
+        {activeTab === "purchases" && (
+          <div>
+            <h3 style={{color:'var(--text-main)'}}>Historial de Compras</h3>
+            <div style={{display:'flex', flexDirection:'column', gap:'15px'}}>
+                {myPurchases.length === 0 && <p style={{color:'var(--text-muted)'}}>No has comprado nada aún.</p>}
+                {myPurchases.map(order => (
+                    <div key={order.id} style={{background:'var(--bg-card)', padding:'15px', borderRadius:'12px', border:'1px solid var(--border-color)', display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+                        <div style={{display:'flex', alignItems:'center', gap:'15px'}}>
+                            <img src={order.product?.image_url} style={{width:'50px', height:'50px', borderRadius:'8px', objectFit:'cover'}} />
+                            <div>
+                                <div style={{fontWeight:'bold', color:'var(--text-main)'}}>{order.product?.title}</div>
+                                <div style={{fontSize:'0.8rem', color:'var(--text-muted)'}}>Vendedor ID: {order.seller_id}</div>
+                            </div>
+                        </div>
+                        <div style={{textAlign:'right'}}>
+                            <div style={{color:'var(--text-main)', fontWeight:'bold'}}>-${order.total_amount ? order.total_amount.toFixed(2) : order.product?.price}</div>
+                            <div style={{fontSize:'0.8rem', color:'var(--primary)'}}>Recibido</div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+          </div>
+        )}
+
+        {/* --- 4. PESTAÑA: FAVORITOS --- */}
         {activeTab === "favorites" && (
-          <div className="product-grid">
-            {favorites.length === 0 && <p style={{gridColumn:'1/-1', textAlign:'center', color:'#888'}}>Aún no tienes favoritos.</p>}
+           <div className="product-grid">
+            {favorites.length === 0 && <p style={{color:'var(--text-muted)'}}>No tienes favoritos.</p>}
             {favorites.map(p => (
               <div key={p.id} className="product-card" onClick={() => navigate(`/product/${p.id}`)}>
-                <img src={p.image_url || 'https://via.placeholder.com/150'} alt={p.title} />
+                <img src={p.image_url} alt={p.title} />
                 <div className="product-info">
                    <div>
                        <h3>{p.title}</h3>
@@ -206,62 +254,42 @@ export default function ProfilePage() {
           </div>
         )}
 
-        {/* PESTAÑA: FORMULARIO */}
-        {activeTab === "add" && (
+        {/* --- 5. FORMULARIO (ADD / EDIT) --- */}
+        {activeTab === "edit_form" && (
           <div className="login-container">
-            <h2 style={{marginTop:0, color:'var(--primary)'}}>{isEditing ? "Editar Producto" : "Publicar Nuevo Producto"}</h2>
+            <h2 style={{marginTop:0, color:'var(--primary)'}}>{isEditingId ? "Editar Producto" : "Nuevo Producto"}</h2>
             <form onSubmit={handleSubmit}>
-              <input 
-                className="login-input" 
-                placeholder="Título (Ej. Calculadora Científica)" 
-                value={formData.title} 
-                onChange={e => setFormData({...formData, title: e.target.value})} 
-                required 
-              />
-              <textarea 
-                className="login-input" 
-                placeholder="Descripción (Estado, detalles, lugar de entrega...)" 
-                value={formData.description} 
-                onChange={e => setFormData({...formData, description: e.target.value})} 
-                rows="4"
-                style={{fontFamily:'inherit'}}
-                required 
-              />
+              <label style={{display:'block', textAlign:'left', fontWeight:'bold'}}>Nombre del producto</label>
+              <input className="login-input" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} required />
+              
+              <label style={{display:'block', textAlign:'left', fontWeight:'bold'}}>Descripción</label>
+              <textarea className="login-input" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} rows="4" required />
+              
               <div style={{display:'flex', gap:'10px'}}>
-                  <input 
-                    className="login-input" 
-                    type="number" 
-                    placeholder="Precio ($)" 
-                    value={formData.price} 
-                    onChange={e => setFormData({...formData, price: e.target.value})} 
-                    required 
-                  />
-                  <select 
-                    className="login-input" 
-                    value={formData.category} 
-                    onChange={e => setFormData({...formData, category: e.target.value})}
-                  >
-                    <option value="food">🍔 Comida</option>
-                    <option value="electronics">💻 Electrónica</option>
-                    <option value="study">📚 Estudio</option>
-                    <option value="other">🌈 Otro</option>
-                  </select>
+                  <div style={{flex:1}}>
+                    <label style={{display:'block', textAlign:'left', fontWeight:'bold'}}>Precio ($)</label>
+                    <input className="login-input" type="number" value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} required />
+                  </div>
+                  <div style={{flex:1}}>
+                    <label style={{display:'block', textAlign:'left', fontWeight:'bold'}}>Categoría</label>
+                    <select className="login-input" value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})}>
+                        <option value="food">🍔 Comida</option>
+                        <option value="electronics">💻 Electrónica</option>
+                        <option value="study">📚 Estudio</option>
+                        <option value="other">🌈 Otro</option>
+                    </select>
+                  </div>
               </div>
 
               <div style={{textAlign:'left', marginBottom:'15px'}}>
-                  <label style={{fontWeight:'bold', display:'block', marginBottom:'5px'}}>Foto del Producto:</label>
-                  <input 
-                    type="file" 
-                    className="login-input" 
-                    style={{padding:'5px'}}
-                    onChange={e => setFormData({...formData, file: e.target.files[0]})} 
-                    required={!isEditing} 
-                  />
+                  <label style={{fontWeight:'bold', display:'block', marginBottom:'5px'}}>Foto (Opcional si editas):</label>
+                  <input type="file" className="login-input" onChange={e => setFormData({...formData, file: e.target.files[0]})} required={!isEditingId} />
               </div>
 
-              <button className="login-btn" type="submit">
-                {isEditing ? "Guardar Cambios" : "¡Publicar Ahora!"}
-              </button>
+              <div style={{display:'flex', gap:'10px'}}>
+                <button type="button" onClick={() => setActiveTab("products")} style={{flex:1, background:'transparent', border:'1px solid var(--border-color)', color:'var(--text-main)', padding:'10px', borderRadius:'8px', cursor:'pointer'}}>Cancelar</button>
+                <button className="login-btn" type="submit" disabled={loading} style={{flex:1}}>{loading ? "Guardando..." : "Guardar"}</button>
+              </div>
             </form>
           </div>
         )}
