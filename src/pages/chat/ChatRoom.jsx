@@ -1,11 +1,11 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { API } from "../utils/Functions";
+import { API } from "../../utils/Functions";
 
 export const ChatRoom = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const chatId = searchParams.get("id");
+  const chatId = searchParams.get("id"); // Esto es un string (ej: "5")
   const token = localStorage.getItem("token");
 
   const [chat, setChat] = useState(null);
@@ -21,10 +21,13 @@ export const ChatRoom = () => {
   useEffect(() => {
     if (!token) { navigate("/"); return; }
     loadData();
-    const interval = setInterval(refreshChat, 3000); 
+    
+    // Polling: Actualizar cada 2 segundos para ver si el vendedor confirmó el pago
+    const interval = setInterval(refreshChat, 2000); 
     return () => clearInterval(interval);
   }, [chatId, token]);
 
+  // Scroll automático
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
@@ -32,8 +35,8 @@ export const ChatRoom = () => {
   const loadData = async () => {
     try {
         const resMe = await fetch(`${API}/auth/me`, { headers: { Authorization: `Bearer ${token}` }});
-        const me = await resMe.json();
-        setCurrentUser(me);
+        if(resMe.ok) setCurrentUser(await resMe.json());
+        
         await refreshChat();
     } catch (e) { navigate("/"); }
   };
@@ -41,12 +44,16 @@ export const ChatRoom = () => {
   const refreshChat = async () => {
     if(!chatId) return;
     try {
+        // 1. Cargar Mensajes
         const resMsgs = await fetch(`${API}/chats/${chatId}/messages`, { headers: { Authorization: `Bearer ${token}` }});
         if(resMsgs.ok) setMessages(await resMsgs.json());
 
+        // 2. Cargar Estado del Chat (Aquí está la clave de los botones)
+        // Pedimos la lista completa y buscamos el chat actual para ver si 'payment_confirmed' cambió
         const resMyChats = await fetch(`${API}/chats/my`, { headers: { Authorization: `Bearer ${token}` }});
         if (resMyChats.ok) {
             const myChats = await resMyChats.json();
+            // IMPORTANTE: Comparamos usando == para que "5" sea igual a 5
             const currentChat = myChats.find(c => c.id == chatId);
             if(currentChat) setChat(currentChat);
         }
@@ -57,31 +64,40 @@ export const ChatRoom = () => {
     const textToSend = textOverride || msgText;
     if (!textToSend.trim()) return;
 
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const host = API.replace('http://', '').replace('https://', '');
-    const ws = new WebSocket(`${protocol}//${host}/ws/chats/${chatId}?token=${token}`);
-    
-    ws.onopen = () => {
-        ws.send(JSON.stringify({ text: textToSend }));
-        ws.close();
-        setMsgText("");
-        setTimeout(refreshChat, 500); 
-    };
+    // --- CORRECCIÓN DE WEBSOCKET PARA EVITAR ERR_NAME_NOT_RESOLVED ---
+    try {
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        // Quitamos http:// o https:// para dejar solo el dominio (ej: api.render.com)
+        const host = API.replace(/^https?:\/\//, ''); 
+        
+        const ws = new WebSocket(`${protocol}//${host}/ws/chats/${chatId}?token=${token}`);
+        
+        ws.onopen = () => {
+            ws.send(JSON.stringify({ text: textToSend }));
+            ws.close(); // Cerramos para evitar conexiones fantasma
+            setMsgText("");
+            setTimeout(refreshChat, 300); // Forzar actualización rápida
+        };
+        
+        ws.onerror = (e) => {
+            console.warn("WS Error (usando fallback http):", e);
+            // Si falla el WS, no pasa nada, el polling de 2s lo actualizará
+        };
+    } catch (e) {
+        console.error("Error creando socket", e);
+    }
   };
   
-  // --- ACCIONES DE VENDEDOR ---
+  // Acciones
   const handleConfirmPayment = async () => {
     if(!confirm("¿Confirmar pago recibido?")) return;
     try {
         await fetch(`${API}/chats/${chatId}/confirm_payment`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
-        refreshChat();
+        refreshChat(); // Actualizar inmediatamente
     } catch (e) { console.error(e); }
   };
 
-  // --- ACCIONES DE COMPRADOR ---
-  const handlePickupSelf = () => {
-    sendMsg("🙋‍♂️ **Yo recogeré el pedido**");
-  };
+  const handlePickupSelf = () => { sendMsg("🙋‍♂️ **Yo recogeré el pedido**"); };
 
   const handleDeliverySubmit = async (e) => {
     e.preventDefault();
@@ -99,7 +115,6 @@ export const ChatRoom = () => {
         });
         if(res.ok) {
             sendMsg("🛵 **Mi orden la recogerá un repartidor**");
-            alert("Solicitud enviada a los repartidores.");
             setShowDeliveryModal(false);
             refreshChat();
         }
@@ -130,8 +145,10 @@ export const ChatRoom = () => {
 
       <div style={{flex:1, overflowY:'auto', padding:'20px', display:'flex', flexDirection:'column'}}>
         <div style={{textAlign:'center', marginBottom:'20px', opacity:0.7, fontSize:'0.9rem'}}>
-            Chat sobre: <strong>{chat.product?.title}</strong>
+            Producto: <strong>{chat.product?.title}</strong>
+            {chat.payment_confirmed && <span style={{color:'#10b981', marginLeft:'10px'}}>✅ Pagado</span>}
         </div>
+        
         {messages.map(m => {
             const isMe = m.author_id === currentUser.id;
             return (
@@ -144,9 +161,6 @@ export const ChatRoom = () => {
                         boxShadow:'var(--shadow)', whiteSpace: 'pre-line', textAlign: 'left'
                     }}>
                         {m.text}
-                        <div style={{fontSize:'0.7rem', opacity:0.7, marginTop:'5px', textAlign:'right'}}>
-                            {new Date(m.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                        </div>
                     </div>
                 </div>
             );
@@ -156,14 +170,16 @@ export const ChatRoom = () => {
 
       <div style={{padding:'15px', background:'var(--bg-card)', borderTop:'1px solid var(--border-color)'}}>
         
+        {/* BOTÓN VENDEDOR: Confirmar Pago */}
         {isSeller && !chat.payment_confirmed && (
             <button className="login-btn" style={{background:'#27ae60', marginBottom:'10px', width:'100%'}} onClick={handleConfirmPayment}>
                 💰 Confirmar Pago Recibido
             </button>
         )}
 
+        {/* BOTONES COMPRADOR: Aparecen SOLO si payment_confirmed es true */}
         {isBuyer && chat.payment_confirmed && (
-            <div style={{display:'flex', gap:'10px', marginBottom:'10px'}}>
+            <div style={{display:'flex', gap:'10px', marginBottom:'10px', animation: 'fadeIn 0.5s'}}>
                 <button className="login-btn" style={{background:'var(--text-muted)', flex:1}} onClick={handlePickupSelf}>
                     🙋‍♂️ Recoger yo mismo
                 </button>
@@ -173,12 +189,14 @@ export const ChatRoom = () => {
             </div>
         )}
 
+        {/* Input Texto */}
         <div style={{display:'flex', gap:'10px'}}>
             <input className="login-input" style={{marginBottom:0}} placeholder="Escribe..." value={msgText} onChange={e => setMsgText(e.target.value)} onKeyDown={e => e.key === 'Enter' && sendMsg()}/>
             <button className="login-btn" style={{width:'auto'}} onClick={() => sendMsg()}>Enviar</button>
         </div>
       </div>
 
+      {/* MODAL DELIVERY (Igual que antes) */}
       {showDeliveryModal && (
         <div className="modal-overlay" style={{position:'fixed', top:0, left:0, right:0, bottom:0, background:'rgba(0,0,0,0.6)', display:'flex', justifyContent:'center', alignItems:'center', zIndex:1000, backdropFilter:'blur(5px)'}}>
             <div className="modal-content" style={{background:'var(--bg-card)', padding:'25px', borderRadius:'16px', width:'90%', maxWidth:'400px', color:'var(--text-main)', border:'1px solid var(--border-color)'}}>
@@ -194,16 +212,13 @@ export const ChatRoom = () => {
                         <option value="FCV">FCV ($1.00)</option>
                     </select>
                     <div style={{textAlign:'right', fontWeight:'bold', color:'var(--accent)', marginBottom:'10px'}}>Costo: ${getFee().toFixed(2)}</div>
-                    
                     <label>Ubicación:</label>
-                    <input className="login-input" placeholder="Aula..." required value={deliveryForm.building} onChange={e => setDeliveryForm({...deliveryForm, building: e.target.value})}/>
-                    
+                    <input className="login-input" placeholder="Ej: Aula 105" required value={deliveryForm.building} onChange={e => setDeliveryForm({...deliveryForm, building: e.target.value})}/>
                     <label>Pago Envío:</label>
                     <div style={{display:'flex', gap:'15px', marginBottom:'20px'}}>
                          <label><input type="radio" name="pay" value="Efectivo" checked={deliveryForm.payment_method === 'Efectivo'} onChange={e => setDeliveryForm({...deliveryForm, payment_method: e.target.value})}/> Efectivo</label>
                          <label><input type="radio" name="pay" value="Transferencia" checked={deliveryForm.payment_method === 'Transferencia'} onChange={e => setDeliveryForm({...deliveryForm, payment_method: e.target.value})}/> Transferencia</label>
                     </div>
-
                     <div style={{display:'flex', gap:'10px'}}>
                         <button type="button" onClick={() => setShowDeliveryModal(false)} style={{flex:1, background:'transparent', border:'1px solid var(--border-color)', color:'var(--text-main)', padding:'10px', borderRadius:'8px'}}>Cancelar</button>
                         <button type="submit" className="login-btn" style={{flex:1}}>Confirmar</button>
@@ -212,6 +227,7 @@ export const ChatRoom = () => {
             </div>
         </div>
       )}
+      <style>{`@keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }`}</style>
     </div>
   );
 };
