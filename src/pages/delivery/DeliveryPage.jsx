@@ -339,7 +339,7 @@ export default function DeliveryPage() {
                       Total a cobrar:{" "}
                       <strong>
                         $
-                        {Number(order.total_amount ?? 0.5).toFixed(2)}
+                        {Number(order.total_amount ?? 0).toFixed(2)}
                       </strong>
                     </span>
                     <button
@@ -449,7 +449,7 @@ export default function DeliveryPage() {
                       <span>Cobrar al cliente:</span>
                       <strong style={{ fontSize: "1.2rem" }}>
                         $
-                        {Number(order.total_amount ?? 0.5).toFixed(2)}
+                        {Number(order.total_amount ?? 0).toFixed(2)}
                       </strong>
                     </div>
                     <div

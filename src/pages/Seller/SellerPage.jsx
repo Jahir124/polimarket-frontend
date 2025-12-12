@@ -490,11 +490,8 @@ export default function ProfilePage() {
                       }}
                     >
                       -
-                      {`$${Number(
-                        order.total_amount != null
-                          ? order.total_amount
-                          : order.product?.price || 0
-                      ).toFixed(2)}`}
+                     {`$${Number(order.total_amount ?? order.product?.price ?? 0).toFixed(2)}`}
+
                     </div>
                     <div
                       style={{
