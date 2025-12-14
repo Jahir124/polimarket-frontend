@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { API } from "../../utils/api";
+import { API } from "../utils/api";
 
 export const ChatRoom = () => {
   const navigate = useNavigate();
