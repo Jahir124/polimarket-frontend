@@ -1,7 +1,9 @@
 // src/pages/Home.jsx
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { API, loadMe } from "../utils/Functions";
+import { loadMe } from "../utils/Functions";
+import { API } from "../utils/api";
+
 import burbuja from "../../assets/burbujatxt.png";
 const Home = () => {
   const navigate = useNavigate();

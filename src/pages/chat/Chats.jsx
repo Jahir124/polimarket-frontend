@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { API } from "../utils/Functions"; // Ajusta la ruta si es necesario
+import { API } from "../utils/api"; // Ajusta la ruta si es necesario
 
 export default function Chats() {
   const navigate = useNavigate();
