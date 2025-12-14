@@ -2,7 +2,7 @@ import { useState } from "react";
 import "../../styles/homeStyles.css";
 import { Link, useNavigate } from "react-router-dom";
 // IMPORTANTE: Asegúrate de importar también 'API' para ver si está bien configurada
-import { login, API } from "../utils/Functions"; 
+import { login, API } from "../utils/api"; 
 // NOTA: Si cambiaste el nombre del archivo a "api.js", cambia la línea de arriba a:
 // import { login, API } from "../utils/api";
 
