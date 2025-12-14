@@ -1,5 +1,20 @@
 /* ---- Variables Globales (Tema Oscuro) ---- */
 :root {
+    --bg-color: #ffffff;
+    --primary-color: #f9fafb;
+    --secondary-color: #e5e7eb;
+    --font-color: #111827;
+
+    --accent-color: #0ea5e9;
+    --brand-color: #007bff;
+    --like-color: #e91e63;
+    --chat-bubble-color: #007bff;
+
+    --success-color: #16a34a;
+    --error-color: #dc2626;
+}
+
+body.dark{
     --bg-color: #121212;
     --primary-color: #1e1e1e;
     --secondary-color: #2a2a2a;
@@ -19,6 +34,7 @@ body {
     margin: 0;
     padding: 0;
 }
+
 
 /* ---- Componentes Globales ---- */
 .container {
