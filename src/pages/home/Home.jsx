@@ -126,7 +126,7 @@ const Home = () => {
             }}
             title="Cambiar tema"
           >
-            {darkMode ? '☀️' : '🌙'}
+            {darkMode ? '🌙' : '☀️'}
           </button>
 
           <div
