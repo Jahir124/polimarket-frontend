@@ -65,7 +65,7 @@ export default function ProductPage() {
   return (
     <div>
       <header className="header">
-        <button className="logo" style={{background:'none', border:'none', fontSize:'1.2rem', cursor:'pointer', color:'var(--text-main)'}} onClick={() => navigate("/home")}>← Volver</button>
+        <button className="logo back" onClick={() => navigate("/home")}>← Volver</button>
         <div className="user-icon" onClick={() => navigate('/profile')}></div>
       </header>
 
