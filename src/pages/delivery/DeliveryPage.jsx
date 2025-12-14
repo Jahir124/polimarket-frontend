@@ -8,7 +8,7 @@ export default function DeliveryPage() {
 
   const [orders, setOrders] = useState([]);
   const [myStats, setMyStats] = useState({ earned: 0, completed: 0 });
-  const [activeTab, setActiveTab] = useState("available"); // 'available' | 'mine'
+  const [activeTab, setActiveTab] = useState("available");
   const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
@@ -17,16 +17,13 @@ export default function DeliveryPage() {
       return;
     }
 
-    // 1. Cargar quién soy
     fetch(`${API}/auth/me`, { headers: { Authorization: `Bearer ${token}` } })
       .then((res) => res.json())
       .then((data) => setCurrentUser(data))
       .catch(() => navigate("/"));
 
-    // 2. Cargar órdenes iniciales
     loadOrders();
 
-    // 3. Polling: Actualizar cada 5 segundos para ver nuevos pedidos en vivo
     const interval = setInterval(loadOrders, 5000);
     return () => clearInterval(interval);
   }, []);
@@ -39,25 +36,32 @@ export default function DeliveryPage() {
       if (res.ok) {
         const data = await res.json();
         setOrders(data);
-        calculateStats(data);
       }
     } catch (e) {
       console.error(e);
     }
   };
 
-  // Calcular estadísticas locales (basadas en lo cargado)
+  useEffect(() => {
+    if (currentUser && orders.length > 0) {
+      calculateStats(orders);
+    }
+  }, [currentUser, orders]);
+
+  // 🔧 FIX: Validación robusta con valores por defecto
   const calculateStats = (data) => {
     if (!currentUser) return;
 
     const mine = data.filter(
       (o) => o.delivery_person_id === currentUser.id && o.status === "accepted"
     );
-    // Suma potencial de lo que tienes en la mano
-    const potential = mine.reduce(
-      (sum, o) => sum + Number(o.delivery_fee ?? 0.5),
-      0
-    );
+    
+    const potential = mine.reduce((sum, o) => {
+      // ✅ Aseguramos que siempre sea un número válido
+      const fee = Number(o.delivery_fee ?? 0.5);
+      return sum + (isNaN(fee) ? 0.5 : fee);
+    }, 0);
+    
     setMyStats((prev) => ({ ...prev, earned: potential }));
   };
 
@@ -85,6 +89,12 @@ export default function DeliveryPage() {
     }
   };
 
+  // 🔧 FIX: Helper para formatear precios de forma segura
+  const formatPrice = (value) => {
+    const num = Number(value ?? 0);
+    return isNaN(num) ? "0.00" : num.toFixed(2);
+  };
+
   if (!currentUser)
     return (
       <div
@@ -95,7 +105,6 @@ export default function DeliveryPage() {
       </div>
     );
 
-  // Filtrar órdenes según la pestaña
   const availableOrders = orders.filter((o) => o.status === "pending");
   const myActiveOrders = orders.filter(
     (o) => o.delivery_person_id === currentUser.id && o.status === "accepted"
@@ -103,7 +112,6 @@ export default function DeliveryPage() {
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg-body)" }}>
-      {/* --- HEADER TÁCTICO --- */}
       <header
         className="header"
         style={{ background: "#0f172a", borderBottom: "1px solid #334155" }}
@@ -135,14 +143,15 @@ export default function DeliveryPage() {
             style={{
               width: "30px",
               height: "30px",
-              backgroundImage: `url(${currentUser.profile_image})`,
+              backgroundImage: currentUser.profile_image 
+                ? `url(${currentUser.profile_image})` 
+                : "none",
             }}
           ></div>
         </div>
       </header>
 
       <div className="container">
-        {/* --- STATS BAR (RESUMEN DEL DÍA) --- */}
         <div
           style={{
             display: "grid",
@@ -170,7 +179,8 @@ export default function DeliveryPage() {
                 color: "var(--accent)",
               }}
             >
-              ${Number(myStats.earned || 0).toFixed(2)}
+              {/* ✅ Uso de helper seguro */}
+              ${formatPrice(myStats.earned)}
             </div>
           </div>
           <div
@@ -197,7 +207,6 @@ export default function DeliveryPage() {
           </div>
         </div>
 
-        {/* --- TABS --- */}
         <div
           className="tabs"
           style={{
@@ -239,7 +248,6 @@ export default function DeliveryPage() {
           </button>
         </div>
 
-        {/* --- LISTA DE PEDIDOS --- */}
         <div
           style={{
             marginTop: "20px",
@@ -248,7 +256,6 @@ export default function DeliveryPage() {
             gap: "15px",
           }}
         >
-          {/* VISTA: DISPONIBLES */}
           {activeTab === "available" && (
             <>
               {availableOrders.length === 0 && (
@@ -286,7 +293,7 @@ export default function DeliveryPage() {
                           color: "var(--text-main)",
                         }}
                       >
-                        {order.faculty}
+                        {order.faculty || "Sin facultad"}
                       </h2>
                       <p
                         style={{
@@ -294,7 +301,7 @@ export default function DeliveryPage() {
                           color: "var(--text-muted)",
                         }}
                       >
-                        {order.building}
+                        {order.building || "Sin ubicación"}
                       </p>
                     </div>
                     <div style={{ textAlign: "right" }}>
@@ -307,8 +314,8 @@ export default function DeliveryPage() {
                           fontWeight: "bold",
                         }}
                       >
-                        +$
-                        {Number(order.delivery_fee ?? 0.5).toFixed(2)}
+                        {/* ✅ Uso de helper seguro */}
+                        +${formatPrice(order.delivery_fee ?? 0.5)}
                       </div>
                       <small
                         style={{
@@ -317,7 +324,7 @@ export default function DeliveryPage() {
                           color: "var(--text-muted)",
                         }}
                       >
-                        {order.payment_method}
+                        {order.payment_method || "Efectivo"}
                       </small>
                     </div>
                   </div>
@@ -338,8 +345,8 @@ export default function DeliveryPage() {
                     <span style={{ fontSize: "0.9rem" }}>
                       Total a cobrar:{" "}
                       <strong>
-                        $
-                        {Number(order.total_amount ?? 0).toFixed(2)}
+                        {/* ✅ Uso de helper seguro */}
+                        ${formatPrice(order.total_amount)}
                       </strong>
                     </span>
                     <button
@@ -359,7 +366,6 @@ export default function DeliveryPage() {
             </>
           )}
 
-          {/* VISTA: MIS ENTREGAS */}
           {activeTab === "mine" && (
             <>
               {myActiveOrders.length === 0 && (
@@ -428,7 +434,7 @@ export default function DeliveryPage() {
                       color: "var(--text-main)",
                     }}
                   >
-                    📍 {order.faculty} - {order.building}
+                    📍 {order.faculty || "Sin facultad"} - {order.building || "Sin ubicación"}
                   </h2>
 
                   <div
@@ -448,8 +454,8 @@ export default function DeliveryPage() {
                     >
                       <span>Cobrar al cliente:</span>
                       <strong style={{ fontSize: "1.2rem" }}>
-                        $
-                        {Number(order.total_amount ?? 0).toFixed(2)}
+                        {/* ✅ Uso de helper seguro */}
+                        ${formatPrice(order.total_amount)}
                       </strong>
                     </div>
                     <div
@@ -461,7 +467,7 @@ export default function DeliveryPage() {
                       }}
                     >
                       <span>Método:</span>
-                      <span>{order.payment_method}</span>
+                      <span>{order.payment_method || "Efectivo"}</span>
                     </div>
                   </div>
 
