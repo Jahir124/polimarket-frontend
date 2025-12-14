@@ -1,7 +1,10 @@
 import { useState } from "react";
 import "../../styles/homeStyles.css";
 import { Link, useNavigate } from "react-router-dom";
-import { login } from "../utils/Functions";
+// IMPORTANTE: Asegúrate de importar también 'API' para ver si está bien configurada
+import { login, API } from "../utils/Functions"; 
+// NOTA: Si cambiaste el nombre del archivo a "api.js", cambia la línea de arriba a:
+// import { login, API } from "../utils/api";
 
 export const Login = () => {
   const [email, setEmail] = useState("");
@@ -11,12 +14,22 @@ export const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // --- ZONA DE DIAGNÓSTICO ---
+    console.log("------------------------------------------------");
+    console.log("🔍 1. Botón 'Ingresar' presionado.");
+    console.log("📧 2. Datos capturados:", { email, password });
+    console.log("🌍 3. URL de la API detectada:", API); 
+    // ^^^ Si esto imprime 'undefined', el problema es tu archivo Functions.js / api.js
+    console.log("🚀 4. Intentando conectar con:", `${API}/auth/login`);
+
     try {
       await login(email, password);
+      console.log("✅ 5. ¡Login Exitoso! Redirigiendo a /home...");
       navigate("/home");
     } catch (error) {
-      console.error("Error de login:", error);
-      alert("Error: Usuario o contraseña incorrectos.");
+      console.error("❌ 6. ERROR FATAL:", error);
+      console.log("------------------------------------------------");
+      alert("Error: " + (error.message || "Usuario o contraseña incorrectos."));
     }
   };
 
