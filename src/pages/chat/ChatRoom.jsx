@@ -1,11 +1,11 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { API } from "../utils/api";
+import { API } from "../utils/Functions"; // ✅ CAMBIADO DE ../../ A ../
 
 export const ChatRoom = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const chatId = searchParams.get("id"); // string
+  const chatId = searchParams.get("id");
   const token = localStorage.getItem("token");
 
   const [chat, setChat] = useState(null);
