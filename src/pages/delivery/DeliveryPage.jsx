@@ -38,13 +38,19 @@ export default function DeliveryPage() {
       });
       if (res.ok) {
         const data = await res.json();
-        setOrders(data);
-        calculateStats(data);
+        setOrders(data); // SOLO esto
       }
     } catch (e) {
       console.error(e);
     }
   };
+
+  useEffect(() => {
+    if (currentUser && orders.length > 0) {
+      calculateStats(orders);
+    }
+  }, [currentUser, orders]);
+
 
   // Calcular estadísticas locales (basadas en lo cargado)
   const calculateStats = (data) => {
