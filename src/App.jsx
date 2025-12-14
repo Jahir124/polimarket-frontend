@@ -28,7 +28,7 @@ function App() {
       <Route path='/product/:id' element={<ProductPage />}/>
       <Route path="/profile" element={<ProfilePage />} />
       <Route path="/config" element={<ConfigPage />} />
-      <Route path="/delivery-dashboard" element={<DeliveryPage />} /> 
+      <Route path="/deliveryDashboard" element={<DeliveryPage />} /> 
     </Routes>
   )
 }

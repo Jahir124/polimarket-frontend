@@ -44,21 +44,30 @@ export default function ConfigPage() {
 
     try {
         const res = await fetch(`${API}/users/me`, {
-            method: "PUT",
-            headers: { Authorization: `Bearer ${token}` },
-            body: formData
+        method: "PUT",
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+        body: formData,
         });
-        if (res.ok) {
-            alert("Perfil actualizado correctamente");
-            window.location.reload(); 
+
+        if (!res.ok) {
+        throw new Error("Error en la respuesta del servidor");
         }
+
+        const updatedUser = await res.json();
+        setUser(updatedUser);
+        setFile(null);
+
+        alert("Perfil actualizado correctamente ✅");
     } catch (error) {
-        console.error(error);
-        alert("Error al actualizar");
+        console.error("ERROR REAL:", error);
+        alert("Error al actualizar ❌");
     } finally {
         setLoading(false);
     }
-  };
+    };
+
 
   const verifyDeliveryCode = () => {
     if (inputCode === SECRET_CODE) {
@@ -112,7 +121,8 @@ export default function ConfigPage() {
 
             <label style={{display:'block', textAlign:'left', marginBottom:'5px', fontWeight:'bold'}}>Cambiar Foto:</label>
             <input 
-                type="file" 
+                type="file"
+                accept="image/*"
                 className="login-input"
                 onChange={e => setFile(e.target.files[0])}
             />
@@ -162,7 +172,7 @@ export default function ConfigPage() {
                     ) : (
                         <div style={{animation:'fadeIn 0.3s'}}>
                             <p style={{fontSize:'0.9rem'}}>Ingresa el código secreto de administrador:</p>
-                            <input 
+                            <input
                                 className="login-input"
                                 type="password"
                                 placeholder="Código secreto"
