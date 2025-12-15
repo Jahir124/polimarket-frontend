@@ -5,17 +5,17 @@ import { loadMe } from "../utils/Functions";
 import { API } from "../utils/api";
 
 import burbuja from "../../assets/burbujatxt.png";
+
 const Home = () => {
   const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
-  const [favorites, setFavorites] = useState(new Set()); // Usamos un Set para búsqueda rápida
+  const [favorites, setFavorites] = useState(new Set());
   const [searchTerm, setSearchTerm] = useState("");
   const [darkMode, setDarkMode] = useState(
-  localStorage.getItem("theme") === "dark"
-);
+    localStorage.getItem("theme") === "dark"
+  );
 
-  
   // Filtros
   const [showFilters, setShowFilters] = useState(false);
   const [selectedCats, setSelectedCats] = useState([]);
@@ -27,15 +27,14 @@ const Home = () => {
   }, []);
 
   useEffect(() => {
-  if (darkMode) {
-    document.body.classList.add("dark");
-    localStorage.setItem("theme", "dark");
-  } else {
-    document.body.classList.remove("dark");
-    localStorage.setItem("theme", "light");
-  }
+    if (darkMode) {
+      document.body.classList.add("dark");
+      localStorage.setItem("theme", "dark");
+    } else {
+      document.body.classList.remove("dark");
+      localStorage.setItem("theme", "light");
+    }
   }, [darkMode]);
-
 
   const fetchProducts = async () => {
     try {
@@ -53,51 +52,49 @@ const Home = () => {
     if (!token) return;
     try {
       const res = await fetch(`${API}/users/me/favorites`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
         const data = await res.json();
-        // Guardamos solo los IDs en un Set para saber cuál marcar
-        setFavorites(new Set(data.map(p => p.id)));
+        setFavorites(new Set(data.map((p) => p.id)));
       }
-    } catch (e) { console.error(e); }
+    } catch (e) {
+      console.error(e);
+    }
   };
 
-  // Función para dar like/dislike
   const toggleFavorite = async (e, productId) => {
-    e.stopPropagation(); // Evita entrar a la página del producto al dar like
+    e.stopPropagation();
     const token = localStorage.getItem("token");
     if (!token) return alert("Inicia sesión para guardar favoritos");
 
-    // Actualización visual optimista (inmediata)
     const newFavs = new Set(favorites);
     if (newFavs.has(productId)) {
-        newFavs.delete(productId);
+      newFavs.delete(productId);
     } else {
-        newFavs.add(productId);
+      newFavs.add(productId);
     }
     setFavorites(newFavs);
 
-    // Llamada al backend
     try {
-        await fetch(`${API}/products/${productId}/favorite`, {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
+      await fetch(`${API}/products/${productId}/favorite`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
     } catch (error) {
-        console.error("Error al dar like", error);
-        // Si falla, revertimos (opcional)
+      console.error("Error al dar like", error);
     }
   };
 
-  // ... (Lógica de filtros igual que antes) ...
   useEffect(() => {
     let result = products;
     if (searchTerm) {
-      result = result.filter(p => p.title.toLowerCase().includes(searchTerm.toLowerCase()));
+      result = result.filter((p) =>
+        p.title.toLowerCase().includes(searchTerm.toLowerCase())
+      );
     }
     if (selectedCats.length > 0) {
-      result = result.filter(p => selectedCats.includes(p.category));
+      result = result.filter((p) => selectedCats.includes(p.category));
     }
     setFilteredProducts(result);
   }, [searchTerm, selectedCats, products]);
@@ -105,37 +102,38 @@ const Home = () => {
   const handleCatChange = (e) => {
     const val = e.target.value;
     if (e.target.checked) setSelectedCats([...selectedCats, val]);
-    else setSelectedCats(selectedCats.filter(c => c !== val));
+    else setSelectedCats(selectedCats.filter((c) => c !== val));
   };
 
   return (
     <>
       <header className="header">
-        <div className="logo" onClick={() => navigate('/home')} style={{cursor:'pointer'}}>POLIMARKET</div>
-        {/* Agrupamos los iconos a la derecha */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-
-          {/* BOTÓN TEMA */}
+        <div
+          className="logo"
+          onClick={() => navigate("/home")}
+          style={{ cursor: "pointer" }}
+        >
+          POLIMARKET
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
           <button
             onClick={() => setDarkMode(!darkMode)}
             style={{
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: '1.4rem'
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              fontSize: "1.4rem",
             }}
             title="Cambiar tema"
           >
-            {darkMode ? '🌙' : '☀️'}
+            {darkMode ? "🌙" : "☀️"}
           </button>
 
           <div
             className="user-icon"
-            onClick={() => navigate('/seller')}
+            onClick={() => navigate("/seller")}
           ></div>
-
         </div>
-
       </header>
 
       <div className="container">
@@ -147,36 +145,95 @@ const Home = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
-          <button className="filter-btn" onClick={() => setShowFilters(!showFilters)}>
-             Filtros ▾
+          <button
+            className="filter-btn"
+            onClick={() => setShowFilters(!showFilters)}
+          >
+            Filtros ▾
           </button>
-           {/* Dropdown simple para filtros */}
-           {showFilters && (
-            <div style={{position:'absolute', top:'100%', right:0, background:'white', padding:'1rem', boxShadow:'0 10px 20px rgba(0,0,0,0.1)', borderRadius:'12px', zIndex:10}}>
-                <label style={{display:'block'}}><input type="checkbox" value="food" onChange={handleCatChange}/> 🍔 Comida</label>
-                <label style={{display:'block'}}><input type="checkbox" value="electronics" onChange={handleCatChange}/> 💻 Tech</label>
-                <label style={{display:'block'}}><input type="checkbox" value="study" onChange={handleCatChange}/> 📚 Estudio</label>
+          {showFilters && (
+            <div
+              style={{
+                position: "absolute",
+                top: "100%",
+                right: 0,
+                background: "white",
+                padding: "1rem",
+                boxShadow: "0 10px 20px rgba(0,0,0,0.1)",
+                borderRadius: "12px",
+                zIndex: 10,
+              }}
+            >
+              <label style={{ display: "block" }}>
+                <input type="checkbox" value="food" onChange={handleCatChange} />{" "}
+                🍔 Comida
+              </label>
+              <label style={{ display: "block" }}>
+                <input
+                  type="checkbox"
+                  value="electronics"
+                  onChange={handleCatChange}
+                />{" "}
+                💻 Tech
+              </label>
+              <label style={{ display: "block" }}>
+                <input
+                  type="checkbox"
+                  value="study"
+                  onChange={handleCatChange}
+                />{" "}
+                📚 Estudio
+              </label>
             </div>
           )}
         </div>
 
         <div className="product-grid">
           {filteredProducts.map((p) => (
-            <div key={p.id} className="product-card" onClick={() => navigate(`/product/${p.id}`)}>
-              <img src={p.image_url || 'https://via.placeholder.com/150'} alt={p.title} />
-              
+            <div
+              key={p.id}
+              className="product-card"
+              onClick={() => navigate(`/product/${p.id}`)}
+            >
+              <img
+                src={p.image_url || "https://via.placeholder.com/150"}
+                alt={p.title}
+              />
+
               <div className="product-info">
                 <div>
                   <h3>{p.title}</h3>
-                  <div className="product-price">${Number(p.price||0).toFixed(2)}</div>
+                  
+                  {/* ✅ NOMBRE DEL VENDEDOR */}
+                  {p.seller && (
+                    <div
+                      style={{
+                        fontSize: "0.85rem",
+                        color: "var(--text-muted)",
+                        marginTop: "4px",
+                        marginBottom: "6px",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "4px",
+                      }}
+                    >
+                      <span>👤</span>
+                      <span>{p.seller.name}</span>
+                    </div>
+                  )}
+
+                  <div className="product-price">
+                    ${Number(p.price || 0).toFixed(2)}
+                  </div>
                 </div>
-                
-                {/* BOTÓN CORAZÓN */}
-                <button 
-                    className={`favorite-btn ${favorites.has(p.id) ? 'liked' : ''}`} 
-                    onClick={(e) => toggleFavorite(e, p.id)}
+
+                <button
+                  className={`favorite-btn ${
+                    favorites.has(p.id) ? "liked" : ""
+                  }`}
+                  onClick={(e) => toggleFavorite(e, p.id)}
                 >
-                    {favorites.has(p.id) ? '♥' : '♡'}
+                  {favorites.has(p.id) ? "♥" : "♡"}
                 </button>
               </div>
             </div>
@@ -184,7 +241,7 @@ const Home = () => {
         </div>
       </div>
 
-      <div className="chat-bubble" onClick={() => navigate('/chats')}>
+      <div className="chat-bubble" onClick={() => navigate("/chats")}>
         <img src={burbuja} alt="Chats" />
       </div>
     </>
