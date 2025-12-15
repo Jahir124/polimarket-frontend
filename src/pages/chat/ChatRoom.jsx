@@ -1,19 +1,17 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { API } from "../utils/api"; // ✅ CAMBIADO DE ../../ A ../
+import { API } from "../utils/api";
 
-export const ChatRoom = () => {
+export default function ChatRoom() {  // ✅ CORREGIDO - Cambiado de "export const ChatRoom"
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const chatId = searchParams.get("id");
   const token = localStorage.getItem("token");
-
   const [chat, setChat] = useState(null);
   const [messages, setMessages] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
   const [msgText, setMsgText] = useState("");
   const messagesEndRef = useRef(null);
-
   const [showDeliveryModal, setShowDeliveryModal] = useState(false);
   const [deliveryForm, setDeliveryForm] = useState({
     faculty: "FIEC",
@@ -27,7 +25,6 @@ export const ChatRoom = () => {
       return;
     }
     loadData();
-
     const interval = setInterval(refreshChat, 2000);
     return () => clearInterval(interval);
   }, [chatId, token]);
@@ -42,7 +39,6 @@ export const ChatRoom = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (resMe.ok) setCurrentUser(await resMe.json());
-
       await refreshChat();
     } catch (e) {
       navigate("/");
@@ -110,12 +106,13 @@ export const ChatRoom = () => {
   };
 
   const handlePickupSelf = () => {
-    sendMsg("🙋‍♂️ **Yo recogeré el pedido**");
+    sendMsg("🙋♂️ **Yo recogeré el pedido**");
   };
 
   const handleDeliverySubmit = async (e) => {
     e.preventDefault();
     if (!chat) return;
+
     try {
       const res = await fetch(`${API}/orders/create`, {
         method: "POST",
@@ -130,6 +127,7 @@ export const ChatRoom = () => {
           payment_method: deliveryForm.payment_method,
         }),
       });
+
       if (res.ok) {
         sendMsg("🛵 **Mi orden la recogerá un repartidor**");
         setShowDeliveryModal(false);
@@ -150,281 +148,113 @@ export const ChatRoom = () => {
 
   if (!currentUser || !chat)
     return (
-      <div
-        className="container"
-        style={{ textAlign: "center", marginTop: "50px" }}
-      >
-        Cargando...
+      <div className="container" style={{ textAlign: "center", marginTop: "50px" }}>
+        Cargando chat...
       </div>
     );
 
-  const isSeller = currentUser.id === chat.seller_id;
   const isBuyer = currentUser.id === chat.buyer_id;
+  const isSeller = currentUser.id === chat.seller_id;
 
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        height: "100vh",
-        background: "var(--bg-body)",
-      }}
-    >
+    <div>
       <header className="header">
-        <button
-          className="logo back"
-          onClick={() => navigate("/chats")}
-          /*style={{
-            background: "none",
-            border: "none",
-            fontSize: "1.2rem",
-            color: "var(--text-main)",
-            cursor: "pointer",
-          }}*/
-        >
-          ← Volver
+        <button className="logo" onClick={() => navigate("/chats")}>
+          ← Chats
         </button>
-        <div
-          className="logo"
-          onClick={() => navigate("/home")}
-          style={{ cursor: "pointer", fontSize: "1.2rem" }}
-        >
-          POLIMARKET
+        <div style={{ fontWeight: "bold", color: "var(--primary)" }}>
+          {chat.product.title}
         </div>
-        <div
-          className="user-icon"
-          onClick={() => navigate("/profile")}
-        ></div>
       </header>
 
-      <div
-        style={{
-          flex: 1,
-          overflowY: "auto",
-          padding: "20px",
-          display: "flex",
-          flexDirection: "column",
-        }}
-      >
+      <div className="container">
         <div
           style={{
-            textAlign: "center",
-            marginBottom: "20px",
-            opacity: 0.7,
-            fontSize: "0.9rem",
+            background: "var(--bg-card)",
+            borderRadius: "12px",
+            padding: "1rem",
+            marginBottom: "1rem",
+            display: "flex",
+            gap: "1rem",
+            border: "1px solid var(--border-color)",
           }}
         >
-          Producto: <strong>{chat.product?.title}</strong>
-          {chat.payment_confirmed && (
-            <span style={{ color: "#10b981", marginLeft: "10px" }}>
-              ✅ Pagado
-            </span>
-          )}
+          <img
+            src={chat.product.image_url}
+            style={{ width: "80px", height: "80px", borderRadius: "8px", objectFit: "cover" }}
+          />
+          <div>
+            <h3 style={{ margin: 0, color: "var(--text-main)" }}>{chat.product.title}</h3>
+            <p style={{ color: "var(--accent)", fontWeight: "bold", fontSize: "1.2rem", margin: "5px 0" }}>
+              ${chat.product.price}
+            </p>
+            <p style={{ fontSize: "0.9rem", color: "var(--text-muted)" }}>
+              {isBuyer ? `Vendedor: ${chat.seller.name}` : `Comprador: ${chat.buyer.name}`}
+            </p>
+          </div>
         </div>
 
-        {messages.map((m) => {
-          const isMe = m.author_id === currentUser.id;
-          return (
-            <div
-              key={m.id}
-              style={{
-                display: "flex",
-                justifyContent: isMe ? "flex-end" : "flex-start",
-                marginBottom: "10px",
-              }}
-            >
-              <div
-                style={{
-                  background: isMe ? "var(--primary)" : "var(--bg-card)",
-                  color: isMe ? "white" : "var(--text-main)",
-                  border: isMe ? "none" : "1px solid var(--border-color)",
-                  padding: "10px 15px",
-                  borderRadius: "15px",
-                  maxWidth: "75%",
-                  boxShadow: "var(--shadow)",
-                  whiteSpace: "pre-line",
-                  textAlign: "left",
-                }}
-              >
-                {m.text}
-              </div>
-            </div>
-          );
-        })}
-        <div ref={messagesEndRef} />
-      </div>
-
-      <div
-        style={{
-          padding: "15px",
-          background: "var(--bg-card)",
-          borderTop: "1px solid var(--border-color)",
-        }}
-      >
         {isSeller && !chat.payment_confirmed && (
           <button
-            className="login-btn"
-            style={{
-              background: "#27ae60",
-              marginBottom: "10px",
-              width: "100%",
-            }}
             onClick={handleConfirmPayment}
+            className="login-btn"
+            style={{ marginBottom: "1rem", width: "100%" }}
           >
-            💰 Confirmar Pago Recibido
+            ✅ Confirmar Pago Recibido
           </button>
         )}
 
         {isBuyer && chat.payment_confirmed && (
-          <div
-            style={{
-              display: "flex",
-              gap: "10px",
-              marginBottom: "10px",
-              animation: "fadeIn 0.5s",
-            }}
-          >
-            <button
-              className="login-btn"
-              style={{ background: "var(--text-muted)", flex: 1 }}
-              onClick={handlePickupSelf}
-            >
-              🙋‍♂️ Recoger yo mismo
+          <div style={{ display: "flex", gap: "10px", marginBottom: "1rem" }}>
+            <button onClick={handlePickupSelf} className="login-btn" style={{ flex: 1 }}>
+              🙋♂️ Recoger Yo
             </button>
             <button
-              className="login-btn"
-              style={{ background: "var(--accent)", color: "black", flex: 1 }}
               onClick={() => setShowDeliveryModal(true)}
+              className="login-btn"
+              style={{ flex: 1, background: "var(--accent)", color: "#0f172a" }}
             >
               🛵 Pedir Delivery
             </button>
           </div>
         )}
 
-        <div style={{ display: "flex", gap: "10px" }}>
-          <input
-            className="login-input"
-            style={{ marginBottom: 0 }}
-            placeholder="Escribe..."
-            value={msgText}
-            onChange={(e) => setMsgText(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && sendMsg()}
-          />
-          <button
-            className="login-btn"
-            style={{ width: "auto" }}
-            onClick={() => sendMsg()}
-          >
-            Enviar
-          </button>
-        </div>
-      </div>
-
-      {showDeliveryModal && (
-        <div
-          className="modal-overlay"
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: "rgba(0,0,0,0.6)",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            zIndex: 1000,
-            backdropFilter: "blur(5px)",
-          }}
-        >
-          <div
-            className="modal-content"
-            style={{
-              background: "var(--bg-card)",
-              padding: "25px",
-              borderRadius: "16px",
-              width: "90%",
-              maxWidth: "400px",
-              color: "var(--text-main)",
-              border: "1px solid var(--border-color)",
-            }}
-          >
-            <h3 style={{ marginTop: 0, color: "var(--primary)" }}>🛵 Delivery</h3>
+        {showDeliveryModal && (
+          <div className="login-container" style={{ marginBottom: "1rem" }}>
+            <h3>Solicitar Delivery</h3>
             <form onSubmit={handleDeliverySubmit}>
-              <label>Facultad:</label>
               <select
-                className="login-input"
                 value={deliveryForm.faculty}
-                onChange={(e) =>
-                  setDeliveryForm({ ...deliveryForm, faculty: e.target.value })
-                }
-              >
-                <option value="FIEC">FIEC ($0.25)</option>
-                <option value="FCNM">FCNM ($0.25)</option>
-                <option value="FIMCP">FIMCP ($0.25)</option>
-                <option value="FCSH">FCSH ($0.50)</option>
-                <option value="FADCOM">FADCOM ($0.50)</option>
-                <option value="FCV">FCV ($1.00)</option>
-              </select>
-              <div
-                style={{
-                  textAlign: "right",
-                  fontWeight: "bold",
-                  color: "var(--accent)",
-                  marginBottom: "10px",
-                }}
-              >
-                Costo: ${Number(getFee() || 0).toFixed(2)}
-              </div>
-              <label>Ubicación:</label>
-              <input
+                onChange={(e) => setDeliveryForm({ ...deliveryForm, faculty: e.target.value })}
                 className="login-input"
-                placeholder="Ej: Aula 105"
-                required
-                value={deliveryForm.building}
-                onChange={(e) =>
-                  setDeliveryForm({ ...deliveryForm, building: e.target.value })
-                }
-              />
-              <label>Pago Envío:</label>
-              <div
-                style={{
-                  display: "flex",
-                  gap: "15px",
-                  marginBottom: "20px",
-                }}
               >
-                <label>
-                  <input
-                    type="radio"
-                    name="pay"
-                    value="Efectivo"
-                    checked={deliveryForm.payment_method === "Efectivo"}
-                    onChange={(e) =>
-                      setDeliveryForm({
-                        ...deliveryForm,
-                        payment_method: e.target.value,
-                      })
-                    }
-                  />{" "}
-                  Efectivo
-                </label>
-                <label>
-                  <input
-                    type="radio"
-                    name="pay"
-                    value="Transferencia"
-                    checked={deliveryForm.payment_method === "Transferencia"}
-                    onChange={(e) =>
-                      setDeliveryForm({
-                        ...deliveryForm,
-                        payment_method: e.target.value,
-                      })
-                    }
-                  />{" "}
-                  Transferencia
-                </label>
-              </div>
+                <option value="FIEC">FIEC</option>
+                <option value="FCNM">FCNM</option>
+                <option value="FIMCP">FIMCP</option>
+                <option value="FCSH">FCSH</option>
+                <option value="FCV">FCV</option>
+                <option value="CELEX">CELEX</option>
+                <option value="FADCOM">FADCOM</option>
+              </select>
+              <input
+                type="text"
+                placeholder="Edificio / Aula"
+                value={deliveryForm.building}
+                onChange={(e) => setDeliveryForm({ ...deliveryForm, building: e.target.value })}
+                className="login-input"
+                required
+              />
+              <select
+                value={deliveryForm.payment_method}
+                onChange={(e) => setDeliveryForm({ ...deliveryForm, payment_method: e.target.value })}
+                className="login-input"
+              >
+                <option value="Efectivo">Efectivo</option>
+                <option value="Transferencia">Transferencia</option>
+              </select>
+              <p style={{ fontSize: "0.9rem", color: "var(--text-muted)" }}>
+                Tarifa de delivery: ${getFee().toFixed(2)}
+              </p>
               <div style={{ display: "flex", gap: "10px" }}>
                 <button
                   type="button"
@@ -436,6 +266,7 @@ export const ChatRoom = () => {
                     color: "var(--text-main)",
                     padding: "10px",
                     borderRadius: "8px",
+                    cursor: "pointer",
                   }}
                 >
                   Cancelar
@@ -446,9 +277,60 @@ export const ChatRoom = () => {
               </div>
             </form>
           </div>
+        )}
+
+        <div
+          style={{
+            background: "var(--bg-card)",
+            borderRadius: "12px",
+            padding: "1rem",
+            height: "400px",
+            overflowY: "auto",
+            marginBottom: "1rem",
+            border: "1px solid var(--border-color)",
+          }}
+        >
+          {messages.map((msg) => (
+            <div
+              key={msg.id}
+              style={{
+                marginBottom: "10px",
+                textAlign: msg.author_id === currentUser.id ? "right" : "left",
+              }}
+            >
+              <div
+                style={{
+                  display: "inline-block",
+                  background: msg.author_id === currentUser.id ? "var(--primary)" : "var(--input-bg)",
+                  color: msg.author_id === currentUser.id ? "#0f172a" : "var(--text-main)",
+                  padding: "10px 15px",
+                  borderRadius: "12px",
+                  maxWidth: "70%",
+                  wordWrap: "break-word",
+                }}
+              >
+                {msg.text}
+              </div>
+            </div>
+          ))}
+          <div ref={messagesEndRef} />
         </div>
-      )}
-      <style>{`@keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }`}</style>
+
+        <div style={{ display: "flex", gap: "10px" }}>
+          <input
+            type="text"
+            className="login-input"
+            placeholder="Escribe un mensaje..."
+            value={msgText}
+            onChange={(e) => setMsgText(e.target.value)}
+            onKeyPress={(e) => e.key === "Enter" && sendMsg()}
+            style={{ flex: 1, marginBottom: 0 }}
+          />
+          <button onClick={() => sendMsg()} className="login-btn" style={{ width: "auto", padding: "0 20px" }}>
+            Enviar
+          </button>
+        </div>
+      </div>
     </div>
   );
-};
+}
