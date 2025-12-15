@@ -86,8 +86,8 @@ export default function ConfigPage() {
     <div>
       <header className="header">
         <button 
-            className="logo" 
-            style={{background:'none', border:'none', fontSize:'1.2rem', color:'var(--text-main)', cursor:'pointer'}} 
+            className="logo back" 
+             
             onClick={() => navigate("/profile")}
         >
             ← Volver
