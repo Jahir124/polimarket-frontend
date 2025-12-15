@@ -1,7 +1,7 @@
 import { Route, Routes } from "react-router-dom"
-import { Login } from "./pages/login/Login"
-import { Register } from "./pages/register/Register"
-import { ChatRoom } from "./pages/chat/ChatRoom"
+import Login  from "./pages/login/Login"
+import Register  from "./pages/register/Register"
+import ChatRoom from "./pages/chat/ChatRoom"
 import { Recupera } from "./pages/recupera/Recupera";
 import "./styles/general.css"
 import ProductPage from "./pages/products/ProductPage";
