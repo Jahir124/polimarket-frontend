@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { API } from "../utils/api";
 
-export default function ChatRoom() {  // ✅ CORREGIDO - Cambiado de "export const ChatRoom"
+export default function ChatRoom() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const chatId = searchParams.get("id");
@@ -146,28 +146,33 @@ export default function ChatRoom() {  // ✅ CORREGIDO - Cambiado de "export con
     return 0.5;
   };
 
-  if (!currentUser || !chat)
+  // ✅ VALIDACIÓN MEJORADA: Esperar hasta que chat y product estén cargados
+  if (!currentUser || !chat || !chat.product) {
     return (
       <div className="container" style={{ textAlign: "center", marginTop: "50px" }}>
-        Cargando chat...
+        <p>Cargando chat...</p>
       </div>
     );
+  }
 
   const isBuyer = currentUser.id === chat.buyer_id;
   const isSeller = currentUser.id === chat.seller_id;
+  const product = chat.product; // ✅ Variable auxiliar para mejor legibilidad
 
   return (
     <div>
+      {/* ✅ HEADER CORREGIDO */}
       <header className="header">
         <button className="logo" onClick={() => navigate("/chats")}>
           ← Chats
         </button>
         <div style={{ fontWeight: "bold", color: "var(--primary)" }}>
-          {chat.product.title}
+          {product.title}
         </div>
       </header>
 
       <div className="container">
+        {/* ✅ TARJETA DE PRODUCTO CORREGIDA */}
         <div
           style={{
             background: "var(--bg-card)",
@@ -180,20 +185,24 @@ export default function ChatRoom() {  // ✅ CORREGIDO - Cambiado de "export con
           }}
         >
           <img
-            src={chat.product.image_url}
+            src={product.image_url || "https://via.placeholder.com/80"}
             style={{ width: "80px", height: "80px", borderRadius: "8px", objectFit: "cover" }}
+            onError={(e) => {
+              e.target.src = "https://via.placeholder.com/80?text=Sin+Imagen";
+            }}
           />
           <div>
-            <h3 style={{ margin: 0, color: "var(--text-main)" }}>{chat.product.title}</h3>
+            <h3 style={{ margin: 0, color: "var(--text-main)" }}>{product.title}</h3>
             <p style={{ color: "var(--accent)", fontWeight: "bold", fontSize: "1.2rem", margin: "5px 0" }}>
-              ${chat.product.price}
+              ${Number(product.price || 0).toFixed(2)}
             </p>
             <p style={{ fontSize: "0.9rem", color: "var(--text-muted)" }}>
-              {isBuyer ? `Vendedor: ${chat.seller.name}` : `Comprador: ${chat.buyer.name}`}
+              {isBuyer ? `Vendedor: ${chat.seller?.name || "Desconocido"}` : `Comprador: ${chat.buyer?.name || "Desconocido"}`}
             </p>
           </div>
         </div>
 
+        {/* Botón de confirmar pago */}
         {isSeller && !chat.payment_confirmed && (
           <button
             onClick={handleConfirmPayment}
@@ -204,6 +213,7 @@ export default function ChatRoom() {  // ✅ CORREGIDO - Cambiado de "export con
           </button>
         )}
 
+        {/* Botones de delivery */}
         {isBuyer && chat.payment_confirmed && (
           <div style={{ display: "flex", gap: "10px", marginBottom: "1rem" }}>
             <button onClick={handlePickupSelf} className="login-btn" style={{ flex: 1 }}>
@@ -219,6 +229,7 @@ export default function ChatRoom() {  // ✅ CORREGIDO - Cambiado de "export con
           </div>
         )}
 
+        {/* Modal de delivery */}
         {showDeliveryModal && (
           <div className="login-container" style={{ marginBottom: "1rem" }}>
             <h3>Solicitar Delivery</h3>
@@ -279,6 +290,7 @@ export default function ChatRoom() {  // ✅ CORREGIDO - Cambiado de "export con
           </div>
         )}
 
+        {/* Área de mensajes */}
         <div
           style={{
             background: "var(--bg-card)",
@@ -316,6 +328,7 @@ export default function ChatRoom() {  // ✅ CORREGIDO - Cambiado de "export con
           <div ref={messagesEndRef} />
         </div>
 
+        {/* Input de mensaje */}
         <div style={{ display: "flex", gap: "10px" }}>
           <input
             type="text"
