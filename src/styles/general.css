@@ -37,6 +37,11 @@ body {
     padding: 0;
 }
 
+.section-title {
+  margin-top: 0;
+  color: var(--text-color);
+}
+
 
 /* ---- Componentes Globales ---- */
 .container {

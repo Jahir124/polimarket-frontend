@@ -144,7 +144,7 @@ export default function ConfigPage() {
 
         {/* --- ZONA DELIVERY --- */}
         <div style={{marginTop:'40px', background:'var(--bg-body)', padding:'20px', borderRadius:'12px', border:'1px solid var(--border-color)'}}>
-            <h3 style={{marginTop:0}}>🛵 Zona de Repartidores</h3>
+            <h3 className="section-title" style={{marginTop:0}}>🛵 Zona de Repartidores</h3>
             
             {/* OPCIÓN 1: YA ES DELIVERY (Desbloqueado) */}
             {isDelivery ? (
