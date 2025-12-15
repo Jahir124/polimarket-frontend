@@ -59,6 +59,8 @@ export default function ProfilePage() {
     if (res.ok) setMyProducts(await res.json());
   };
 
+  // En la función loadMySales, línea ~85:
+
   const loadMySales = async () => {
     const res = await fetch(`${API}/users/me/sales`, {
       headers: { Authorization: `Bearer ${token}` },
@@ -66,13 +68,16 @@ export default function ProfilePage() {
     if (res.ok) {
       const data = await res.json();
       setMySales(data);
+    
+    // ✅ CORREGIDO: Usar total_amount en lugar de product.price
       const total = data.reduce(
-        (sum, order) => sum + Number(order.product?.price || 0),
+        (sum, order) => sum + Number(order.total_amount || 0),
         0
       );
       setEarnings(total);
     }
   };
+
 
   const loadMyPurchases = async () => {
     const res = await fetch(`${API}/users/me/purchases`, {

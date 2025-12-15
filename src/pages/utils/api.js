@@ -1,8 +1,5 @@
 // src/utils/api.js
+export const API = import.meta.env.VITE_APP_API_URL || "https://api-polimarket.onrender.com";
 
-// Producción: backend en Render
-export const API = "https://api-polimarket.onrender.com";
-
-
-// Desarrollo local:
-// export const API = "http://127.0.0.1:8000";
+// Para debug (eliminar en producción)
+console.log("🌍 API configurada:", API);
