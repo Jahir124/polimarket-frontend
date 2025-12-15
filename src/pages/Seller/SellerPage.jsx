@@ -164,14 +164,8 @@ export default function ProfilePage() {
     <div>
       <header className="header">
         <button
-          className="logo"
-          style={{
-            background: "none",
-            border: "none",
-            fontSize: "1.2rem",
-            cursor: "pointer",
-            color: "var(--text-main)",
-          }}
+          className="logo back"
+          
           onClick={() => navigate("/home")}
         >
           ← Volver

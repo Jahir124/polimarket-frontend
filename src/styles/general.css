@@ -1,9 +1,26 @@
 /* ---- Variables Globales (Tema Oscuro) ---- */
 :root {
+    --bg-color: #ffffff;
+    --primary-color: #f9fafb;
+    --secondary-color: #e5e7eb;
+    --text-color: #111827;
+    --text-muted: #6b7280;
+
+    --accent-color: #0ea5e9;
+    --brand-color: #007bff;
+    --like-color: #e91e63;
+    --chat-bubble-color: #007bff;
+
+    --success-color: #16a34a;
+    --error-color: #dc2626;
+}
+
+body.dark{
     --bg-color: #121212;
     --primary-color: #1e1e1e;
     --secondary-color: #2a2a2a;
-    --font-color: #e0e0e0;
+    --text-color: #e0e0e0;
+    --text-muted: #9ca3af;
     --accent-color: #03dac6;
     --brand-color: #007bff; /* Azul para el logo */
     --like-color: #e91e63; /* Rosa para corazón */
@@ -15,10 +32,21 @@
 body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     background-color: var(--bg-color);
-    color: var(--font-color);
+    color: var(--text-color);
     margin: 0;
     padding: 0;
 }
+
+.section-title {
+  margin-top: 0;
+  color: var(--text-color);
+  text-shadow:
+    -1px -1px 0 #000,
+     1px -1px 0 #000,
+    -1px  1px 0 #000,
+     1px  1px 0 #000;
+}
+
 
 /* ---- Componentes Globales ---- */
 .container {
@@ -55,12 +83,29 @@ body {
     border-bottom: 1px solid var(--secondary-color);
 }
 
+.back-btn,
+.back-link,
+.header button {
+    color: var(--text-color);
+}
+
+
 .logo {
     font-size: 1.8rem;
     font-weight: bold;
     color: var(--brand-color);
     text-decoration: none;
 }
+
+.logo.back {
+    font-size: 1.2rem;
+    font-weight: 500;
+    color: var(--font-color);
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
 
 .user-icon {
     width: 40px;
@@ -144,6 +189,7 @@ body {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    color: var(--text-color);
 }
 
 .product-price {
@@ -216,7 +262,7 @@ body {
 .analytics-card h3 {
     margin: 0 0 0.5rem 0;
     font-size: 1rem;
-    color: #aaa;
+    color: var(--text-muted);
 }
 
 .analytics-value {
@@ -475,5 +521,5 @@ body {
 
 .chat-item-info p {
     margin: 0;
-    color: #aaa;
+    color: var(--text-muted);
 }   

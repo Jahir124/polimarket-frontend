@@ -56,8 +56,8 @@ export default function Chats() {
     <div>
       <header className="header">
         <button
-          className="logo"
-          style={{ background: "none", border: "none", fontSize: "1.1rem", cursor: "pointer", color: "var(--text-main)" }}
+          className="logo back"
+          //style={{ background: "none", border: "none", fontSize: "1.1rem", cursor: "pointer", color: "var(--text-main)" }}
           onClick={() => navigate("/home")}
         >
           ← Volver

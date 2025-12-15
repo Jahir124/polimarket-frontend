@@ -11,6 +11,10 @@ const Home = () => {
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [favorites, setFavorites] = useState(new Set()); // Usamos un Set para búsqueda rápida
   const [searchTerm, setSearchTerm] = useState("");
+  const [darkMode, setDarkMode] = useState(
+  localStorage.getItem("theme") === "dark"
+);
+
   
   // Filtros
   const [showFilters, setShowFilters] = useState(false);
@@ -21,6 +25,17 @@ const Home = () => {
     fetchProducts();
     fetchFavorites();
   }, []);
+
+  useEffect(() => {
+  if (darkMode) {
+    document.body.classList.add("dark");
+    localStorage.setItem("theme", "dark");
+  } else {
+    document.body.classList.remove("dark");
+    localStorage.setItem("theme", "light");
+  }
+  }, [darkMode]);
+
 
   const fetchProducts = async () => {
     try {
@@ -98,13 +113,29 @@ const Home = () => {
       <header className="header">
         <div className="logo" onClick={() => navigate('/home')} style={{cursor:'pointer'}}>POLIMARKET</div>
         {/* Agrupamos los iconos a la derecha */}
-        <div style={{display:'flex', alignItems:'center', gap:'15px'}}>
-            
-            
+        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
 
+          {/* BOTÓN TEMA */}
+          <button
+            onClick={() => setDarkMode(!darkMode)}
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: '1.4rem'
+            }}
+            title="Cambiar tema"
+          >
+            {darkMode ? '🌙' : '☀️'}
+          </button>
 
-        <div className="user-icon" onClick={() => navigate('/profile')}></div>
+          <div
+            className="user-icon"
+            onClick={() => navigate('/profile')}
+          ></div>
+
         </div>
+
       </header>
 
       <div className="container">
@@ -142,7 +173,7 @@ const Home = () => {
                 
                 {/* BOTÓN CORAZÓN */}
                 <button 
-                    className={`fav-btn ${favorites.has(p.id) ? 'liked' : ''}`} 
+                    className={`favorite-btn ${favorites.has(p.id) ? 'liked' : ''}`} 
                     onClick={(e) => toggleFavorite(e, p.id)}
                 >
                     {favorites.has(p.id) ? '♥' : '♡'}
