@@ -20,7 +20,7 @@ function App() {
       <Route path="/recupera" element={<Recupera />} />
       <Route path="/home" element={<Home />} />
       <Route path="/product/:id" element={<ProductPage />} />
-      <Route path="/seller" element={<ProfilePage />} />
+      <Route path="/seller" element={<SellerPage />} />
       <Route path="/chats" element={<Chats />} />
       <Route path="/chat-room" element={<ChatRoom />} />
       <Route path="/config" element={<ConfigPage />} />
