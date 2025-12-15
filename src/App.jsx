@@ -8,7 +8,7 @@ import ProductPage from "./pages/products/ProductPage";
 import ProfilePage from "./pages/Seller/SellerPage";
 import Home from "./pages/home/Home";
 import Chats from "./pages/chat/Chats";
-
+import BulkUpload from "./pages/BulkUpload/BulkUpload";
 import ConfigPage from "./pages/config/ConfigPage";
 import DeliveryPage from "./pages/delivery/DeliveryPage";
 
@@ -29,6 +29,7 @@ function App() {
       <Route path="/profile" element={<ProfilePage />} />
       <Route path="/config" element={<ConfigPage />} />
       <Route path="/delivery-dashboard" element={<DeliveryPage />} /> 
+      <Route path="/bulk-upload" element={<BulkUpload />} />
     </Routes>
   )
 }

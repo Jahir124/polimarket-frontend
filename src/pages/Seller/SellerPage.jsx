@@ -59,8 +59,6 @@ export default function ProfilePage() {
     if (res.ok) setMyProducts(await res.json());
   };
 
-  // En la función loadMySales, línea ~85:
-
   const loadMySales = async () => {
     const res = await fetch(`${API}/users/me/sales`, {
       headers: { Authorization: `Bearer ${token}` },
@@ -68,8 +66,8 @@ export default function ProfilePage() {
     if (res.ok) {
       const data = await res.json();
       setMySales(data);
-    
-    // ✅ CORREGIDO: Usar total_amount en lugar de product.price
+
+      // ✅ CORREGIDO: Usar total_amount en lugar de product.price
       const total = data.reduce(
         (sum, order) => sum + Number(order.total_amount || 0),
         0
@@ -77,7 +75,6 @@ export default function ProfilePage() {
       setEarnings(total);
     }
   };
-
 
   const loadMyPurchases = async () => {
     const res = await fetch(`${API}/users/me/purchases`, {
@@ -163,11 +160,7 @@ export default function ProfilePage() {
   return (
     <div>
       <header className="header">
-        <button
-          className="logo back"
-          
-          onClick={() => navigate("/home")}
-        >
+        <button className="logo back" onClick={() => navigate("/home")}>
           ← Volver
         </button>
         <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
@@ -243,13 +236,35 @@ export default function ProfilePage() {
         {/* 1. Mis productos */}
         {activeTab === "products" && (
           <>
-            <button
-              className="login-btn"
-              style={{ marginBottom: "20px" }}
-              onClick={handleCreateClick}
-            >
-              + Publicar Nuevo Producto
-            </button>
+            {/* ✅ BOTONES DE ACCIÓN - ACTUALIZADO */}
+            <div style={{ 
+              display: "flex", 
+              gap: "10px", 
+              marginBottom: "20px",
+              flexWrap: "wrap" // Para móviles
+            }}>
+              <button
+                className="login-btn"
+                onClick={handleCreateClick}
+                style={{ flex: "1 1 200px" }}
+              >
+                + Nuevo Producto
+              </button>
+              
+              <button
+                className="login-btn"
+                onClick={() => navigate("/bulk-upload")}
+                style={{
+                  flex: "1 1 200px",
+                  background: "var(--accent)",
+                  color: "#0f172a",
+                  fontWeight: "bold",
+                }}
+              >
+                📊 Carga Masiva
+              </button>
+            </div>
+
             <div className="product-grid">
               {myProducts.length === 0 && (
                 <p style={{ color: "var(--text-muted)" }}>
@@ -399,8 +414,7 @@ export default function ProfilePage() {
                         fontWeight: "bold",
                       }}
                     >
-                      +
-                      {`$${Number(order.product?.price || 0).toFixed(2)}`}
+                      +${Number(order.product?.price || 0).toFixed(2)}
                     </div>
                     <div
                       style={{
@@ -488,9 +502,10 @@ export default function ProfilePage() {
                         fontWeight: "bold",
                       }}
                     >
-                      -
-                     {`$${Number(order.total_amount ?? order.product?.price ?? 0).toFixed(2)}`}
-
+                      -$
+                      {Number(
+                        order.total_amount ?? order.product?.price ?? 0
+                      ).toFixed(2)}
                     </div>
                     <div
                       style={{
@@ -601,6 +616,7 @@ export default function ProfilePage() {
                   <input
                     className="login-input"
                     type="number"
+                    step="0.01"
                     value={formData.price}
                     onChange={(e) =>
                       setFormData({ ...formData, price: e.target.value })
@@ -650,6 +666,7 @@ export default function ProfilePage() {
                 </label>
                 <input
                   type="file"
+                  accept="image/*"
                   className="login-input"
                   onChange={(e) =>
                     setFormData({ ...formData, file: e.target.files[0] })
