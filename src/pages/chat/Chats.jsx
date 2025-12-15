@@ -73,7 +73,7 @@ export default function Chats() {
 
         <div
           className="user-icon"
-          onClick={() => navigate("/profile")}
+          onClick={() => navigate("/seller")}
           style={{ cursor: "pointer" }}
         />
       </header>

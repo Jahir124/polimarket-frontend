@@ -131,7 +131,7 @@ const Home = () => {
 
           <div
             className="user-icon"
-            onClick={() => navigate('/profile')}
+            onClick={() => navigate('/')}
           ></div>
 
         </div>
