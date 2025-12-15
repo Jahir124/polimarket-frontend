@@ -67,7 +67,6 @@ export default function ProfilePage() {
       const data = await res.json();
       setMySales(data);
 
-      // ✅ CORREGIDO: Usar total_amount en lugar de product.price
       const total = data.reduce(
         (sum, order) => sum + Number(order.total_amount || 0),
         0
@@ -112,6 +111,33 @@ export default function ProfilePage() {
       file: null,
     });
     setActiveTab("edit_form");
+  };
+
+  // ✅ NUEVA FUNCIÓN: ELIMINAR PRODUCTO
+  const handleDeleteClick = async (productId, productTitle) => {
+    const confirmed = window.confirm(
+      `¿Estás seguro de eliminar "${productTitle}"?\n\nEsta acción no se puede deshacer.`
+    );
+
+    if (!confirmed) return;
+
+    try {
+      const res = await fetch(`${API}/products/${productId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (res.ok) {
+        alert("✅ Producto eliminado correctamente");
+        await loadMyProducts();
+      } else {
+        const error = await res.json();
+        alert(`❌ Error: ${error.detail || "No se pudo eliminar"}`);
+      }
+    } catch (error) {
+      console.error("Error eliminando producto:", error);
+      alert("❌ Error de conexión al eliminar producto");
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -236,12 +262,11 @@ export default function ProfilePage() {
         {/* 1. Mis productos */}
         {activeTab === "products" && (
           <>
-            {/* ✅ BOTONES DE ACCIÓN - ACTUALIZADO */}
             <div style={{ 
               display: "flex", 
               gap: "10px", 
               marginBottom: "20px",
-              flexWrap: "wrap" // Para móviles
+              flexWrap: "wrap"
             }}>
               <button
                 className="login-btn"
@@ -281,20 +306,40 @@ export default function ProfilePage() {
                         ${Number(p.price || 0).toFixed(2)}
                       </span>
                     </div>
-                    <button
-                      onClick={() => handleEditClick(p)}
-                      style={{
-                        border: "none",
-                        background: "var(--bg-body)",
-                        padding: "8px",
-                        borderRadius: "8px",
-                        cursor: "pointer",
-                        fontSize: "1.2rem",
-                      }}
-                      title="Editar este producto"
-                    >
-                      ✏️
-                    </button>
+                    
+                    {/* ✅ BOTONES DE ACCIÓN: EDITAR Y ELIMINAR */}
+                    <div style={{ display: "flex", gap: "8px" }}>
+                      <button
+                        onClick={() => handleEditClick(p)}
+                        style={{
+                          border: "none",
+                          background: "var(--bg-body)",
+                          padding: "8px",
+                          borderRadius: "8px",
+                          cursor: "pointer",
+                          fontSize: "1.2rem",
+                        }}
+                        title="Editar producto"
+                      >
+                        ✏️
+                      </button>
+
+                      <button
+                        onClick={() => handleDeleteClick(p.id, p.title)}
+                        style={{
+                          border: "none",
+                          background: "#fee",
+                          padding: "8px",
+                          borderRadius: "8px",
+                          cursor: "pointer",
+                          fontSize: "1.2rem",
+                          color: "#c00",
+                        }}
+                        title="Eliminar producto"
+                      >
+                        🗑️
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
