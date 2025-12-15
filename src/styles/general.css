@@ -40,6 +40,11 @@ body {
 .section-title {
   margin-top: 0;
   color: var(--text-color);
+  text-shadow:
+    -1px -1px 0 #000,
+     1px -1px 0 #000,
+    -1px  1px 0 #000,
+     1px  1px 0 #000;
 }
 
 
