@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import "../../styles/homeStyles.css"
 import { API } from "../utils/api";
 
-export default function Register = () => {
+export default function Register (){
   const navigate = useNavigate();
 
   const [name, setName] = useState("");
